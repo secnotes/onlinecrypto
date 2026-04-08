@@ -201,7 +201,7 @@
 
         .category h3 {
             color: var(--accent-color);
-            font-size: 0.9rem;
+            font-size: 1rem;
             margin-bottom: 10px;
             padding-bottom: 5px;
             border-bottom: 1px solid rgba(0, 212, 255, 0.3);
@@ -269,8 +269,8 @@
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: var(--text-label);
-            font-size: 0.9rem;
+            color: var(--accent-color);
+            font-size: 1rem;
         }
 
         .form-group input,
@@ -283,6 +283,7 @@
             border-radius: 8px;
             color: var(--text-primary);
             font-size: 0.9rem;
+            font-family: inherit;
             transition: border-color 0.3s ease;
         }
 
@@ -296,7 +297,6 @@
         .form-group textarea {
             min-height: 120px;
             resize: vertical;
-            font-family: 'Consolas', 'Monaco', monospace;
         }
 
         .form-group select option {
@@ -328,7 +328,7 @@
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 8px 20px;
             border: none;
             border-radius: 8px;
             font-size: 0.9rem;
@@ -369,14 +369,13 @@
         .output-section h4 {
             color: var(--accent-color);
             margin-bottom: 10px;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
 
         .output-box {
             background: var(--bg-tertiary);
             border-radius: 6px;
             padding: 15px;
-            font-family: 'Consolas', 'Monaco', monospace;
             word-break: break-all;
             min-height: 60px;
             max-height: 400px;
@@ -451,10 +450,11 @@
 
         footer {
             text-align: center;
-            margin-top: 40px;
-            padding: 20px;
+            margin-top: 30px;
+            padding: 10px;
             color: var(--text-muted);
             font-size: 0.85rem;
+            line-height: 1.4;
         }
 
         footer a {
@@ -463,7 +463,7 @@
         }
 
         footer p {
-            margin: 10px 0;
+            margin: 3px 0;
         }
 
         .footer-main {
@@ -471,7 +471,7 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            margin: 10px 0;
+            margin: 3px 0;
         }
 
         .footer-divider {
@@ -1516,7 +1516,7 @@
                             <input type="text" id="ivInput" placeholder="${t('placeholderIV')}">
                             <div class="key-info" id="ivInfo"></div>
                             <div class="form-group" style="margin-top: 8px; margin-bottom: 0;">
-                                <label style="font-size: 0.85rem;">${t('lblIVFormat')}</label>
+                                <label>${t('lblIVFormat')}</label>
                                 <select id="ivFormat" onchange="updateIvInfo()">
                                     <option value="Utf8">${t('formatString')}</option>
                                     <option value="Hex">${t('formatHexShort')}</option>
