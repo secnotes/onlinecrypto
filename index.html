@@ -1,0 +1,2481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线加解密工具</title>
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js"></script>
+    <script>
+        // 在页面渲染前检测浏览器主题和语言
+        (function() {
+            // 主题检测
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+
+            // 语言检测
+            const savedLang = localStorage.getItem('language');
+            let lang;
+            if (savedLang) {
+                lang = savedLang;
+            } else {
+                const browserLang = navigator.language || navigator.userLanguage;
+                lang = browserLang.startsWith('zh') ? 'zh' : 'en';
+            }
+            document.documentElement.setAttribute('data-lang', lang);
+            // 设置全局语言变量，供后续使用
+            window.__initialLang = lang;
+        })();
+    </script>
+    <style>
+        /* CSS 变量 - 暗色主题（默认） */
+        :root {
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            --bg-primary: rgba(255, 255, 255, 0.05);
+            --bg-secondary: rgba(0, 0, 0, 0.3);
+            --bg-tertiary: rgba(0, 0, 0, 0.4);
+            --bg-input: rgba(0, 0, 0, 0.3);
+            --text-primary: #fff;
+            --text-secondary: #e0e0e0;
+            --text-muted: #888;
+            --text-label: #ccc;
+            --accent-color: #00d4ff;
+            --accent-secondary: #7b2cbf;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-hover: #00d4ff;
+            --btn-secondary-bg: rgba(255, 255, 255, 0.1);
+            --btn-secondary-border: rgba(255, 255, 255, 0.2);
+            --select-option-bg: #1a1a2e;
+            --error-color: #ff6b6b;
+            --info-bg: rgba(123, 44, 191, 0.1);
+            --warning-bg: rgba(255, 107, 107, 0.1);
+            --key-info-bg: rgba(0, 212, 255, 0.1);
+            --toast-bg: #00d4ff;
+            --toast-color: #000;
+        }
+
+        /* 亮色主题 */
+        [data-theme="light"] {
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 50%, #d4dbe8 100%);
+            --bg-primary: rgba(255, 255, 255, 0.8);
+            --bg-secondary: rgba(0, 0, 0, 0.05);
+            --bg-tertiary: rgba(0, 0, 0, 0.08);
+            --bg-input: rgba(255, 255, 255, 0.9);
+            --text-primary: #1a1a2e;
+            --text-secondary: #2d3748;
+            --text-muted: #718096;
+            --text-label: #4a5568;
+            --accent-color: #0099cc;
+            --accent-secondary: #7b2cbf;
+            --border-color: rgba(0, 0, 0, 0.15);
+            --border-hover: #0099cc;
+            --btn-secondary-bg: rgba(0, 0, 0, 0.08);
+            --btn-secondary-border: rgba(0, 0, 0, 0.15);
+            --select-option-bg: #ffffff;
+            --error-color: #e53e3e;
+            --info-bg: rgba(123, 44, 191, 0.1);
+            --warning-bg: rgba(229, 62, 62, 0.1);
+            --key-info-bg: rgba(0, 153, 204, 0.1);
+            --toast-bg: #0099cc;
+            --toast-color: #fff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: var(--text-secondary);
+            padding: 20px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, var(--accent-color), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-muted);
+        }
+
+        .header-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .control-btn {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+            border-color: var(--accent-color);
+        }
+
+        @media (max-width: 900px) {
+            .header-controls {
+                position: static;
+                margin-bottom: 15px;
+                justify-content: center;
+            }
+            .control-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 16px;
+            }
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: static !important;
+            }
+            .header-controls {
+                position: static;
+                margin-bottom: 15px;
+                justify-content: center;
+            }
+        }
+
+        .sidebar {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .category {
+            margin-bottom: 20px;
+        }
+
+        .category h3 {
+            color: var(--accent-color);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .algorithm-btn {
+            display: block;
+            width: 100%;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        .algorithm-btn:hover {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: var(--accent-color);
+        }
+
+        .algorithm-btn.active {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(123, 44, 191, 0.15));
+            border-color: var(--accent-color);
+            color: var(--text-primary);
+        }
+
+        .workspace {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 25px;
+            transition: background 0.3s ease;
+        }
+
+        .workspace h2 {
+            color: var(--text-primary);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .workspace h2 .badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            background: var(--accent-secondary);
+            border-radius: 4px;
+            color: #fff;
+        }
+
+        .workspace .description {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-label);
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--border-hover);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .form-group select option {
+            background: var(--select-option-bg);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            accent-color: var(--accent-color);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-color), #0099cc);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--btn-secondary-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--btn-secondary-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+        }
+
+        .output-section {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .output-section h4 {
+            color: var(--accent-color);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .output-box {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            word-break: break-all;
+            min-height: 60px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .output-box.error {
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: rgba(0, 212, 255, 0.3);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .info-box {
+            background: var(--info-bg);
+            border-left: 3px solid var(--accent-secondary);
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            color: var(--text-label);
+        }
+
+        .warning-box {
+            background: var(--warning-bg);
+            border-left: 3px solid var(--error-color);
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            color: var(--text-label);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--toast-bg);
+            color: var(--toast-color);
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        footer p {
+            margin: 10px 0;
+        }
+
+        .footer-main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin: 10px 0;
+        }
+
+        .footer-divider {
+            margin: 0 10px;
+            opacity: 0.5;
+        }
+
+        .github-icon {
+            fill: var(--accent-color);
+            transition: fill 0.3s ease;
+        }
+
+        .footer-main:hover .github-icon {
+            fill: var(--text-primary);
+        }
+
+        .mode-toggle {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .mode-toggle button,
+        .mode-btn {
+            flex: 1;
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .mode-toggle button.active,
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--accent-color), #0099cc);
+            color: #fff;
+        }
+
+        .advanced-section {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .advanced-section h4 {
+            color: var(--accent-color);
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .advanced-section h4::before {
+            content: '⚙️';
+        }
+
+        .key-info {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .key-info span {
+            padding: 4px 8px;
+            background: var(--key-info-bg);
+            border-radius: 4px;
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: 8px 8px 0 0;
+            margin-bottom: -1px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible-content.open {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-controls">
+                <button class="control-btn" onclick="toggleLanguage()" title="Language"><span id="lang-icon">EN</span></button>
+                <button class="control-btn" onclick="toggleTheme()" title="Theme"><span id="theme-icon">🌙</span></button>
+            </div>
+            <h1 id="pageTitle">在线加解密工具</h1>
+            <p id="pageSubtitle">基于 Crypto.js 的纯前端加密解密工具，数据不会上传服务器</p>
+        </header>
+
+        <div class="main-content">
+            <aside class="sidebar">
+                <div class="category">
+                    <h3 id="catSymmetric">对称加密</h3>
+                    <button class="algorithm-btn active" data-algo="AES">AES</button>
+                    <button class="algorithm-btn" data-algo="DES">DES</button>
+                    <button class="algorithm-btn" data-algo="TripleDES">TripleDES</button>
+                    <button class="algorithm-btn" data-algo="Blowfish">Blowfish</button>
+                    <button class="algorithm-btn" data-algo="Rabbit">Rabbit</button>
+                    <button class="algorithm-btn" data-algo="RC4">RC4</button>
+                    <button class="algorithm-btn" data-algo="RC4Drop">RC4Drop</button>
+                </div>
+                <div class="category">
+                    <h3 id="catHash">哈希算法</h3>
+                    <button class="algorithm-btn" data-algo="MD5">MD5</button>
+                    <button class="algorithm-btn" data-algo="SHA1">SHA-1</button>
+                    <button class="algorithm-btn" data-algo="SHA224">SHA-224</button>
+                    <button class="algorithm-btn" data-algo="SHA256">SHA-256</button>
+                    <button class="algorithm-btn" data-algo="SHA384">SHA-384</button>
+                    <button class="algorithm-btn" data-algo="SHA512">SHA-512</button>
+                    <button class="algorithm-btn" data-algo="SHA3">SHA-3</button>
+                    <button class="algorithm-btn" data-algo="RIPEMD160">RIPEMD-160</button>
+                </div>
+                <div class="category">
+                    <h3 id="catHMAC">HMAC</h3>
+                    <button class="algorithm-btn" data-algo="HMAC">HMAC</button>
+                </div>
+                <div class="category">
+                    <h3 id="catEncoding">编码工具</h3>
+                    <button class="algorithm-btn" data-algo="UniversalConvert" id="btnUniversalConvert">综合转换</button>
+                    <button class="algorithm-btn" data-algo="Base64">Base64</button>
+                    <button class="algorithm-btn" data-algo="Hex" id="btnHexEncode">Hex 编码</button>
+                    <button class="algorithm-btn" data-algo="Latin1">Latin1</button>
+                    <button class="algorithm-btn" data-algo="Utf8" id="btnUtf8Encode">UTF-8 编码</button>
+                </div>
+                <div class="category">
+                    <h3 id="catKDF">密钥派生</h3>
+                    <button class="algorithm-btn" data-algo="PBKDF2">PBKDF2</button>
+                    <button class="algorithm-btn" data-algo="EvpKDF">EvpKDF</button>
+                </div>
+            </aside>
+
+            <main class="workspace" id="workspace">
+                <!-- 内容由 JavaScript 动态生成 -->
+            </main>
+        </div>
+
+        <footer>
+            <div class="footer-main">
+                <span>© 2026</span>
+                <a href="https://github.com/secnotes" target="_blank" rel="noopener">Security Notes</a>
+                <span class="footer-divider">|</span>
+                <svg class="github-icon" viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+                <a href="https://github.com/secnotes/onlinecrypto" target="_blank" rel="noopener">Star on GitHub</a>
+            </div>
+            <p id="footerText1">所有加密解密操作均在浏览器本地完成，数据不会上传至任何服务器</p>
+            <p id="footerText2">Powered by <a href="https://github.com/brix/crypto-js" target="_blank">Crypto.js</a></p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast">已复制到剪贴板</div>
+
+    <script>
+        // 语言包
+        const i18n = {
+            zh: {
+                // 标题
+                title: '在线加解密工具',
+                subtitle: '基于 Crypto.js 的纯前端加密解密工具，数据不会上传服务器',
+                footer1: '所有加密解密操作均在浏览器本地完成，数据不会上传至任何服务器',
+                footer2: 'Powered by',
+
+                // 分类
+                catSymmetric: '对称加密',
+                catHash: '哈希算法',
+                catHMAC: 'HMAC',
+                catEncoding: '编码工具',
+                catKDF: '密钥派生',
+
+                // 按钮
+                btnEncrypt: '加密 / 编码',
+                btnDecrypt: '解密 / 解码',
+                btnProcess: '加密',
+                btnProcessDecrypt: '解密',
+                btnCalculate: '计算',
+                btnConvert: '转换',
+                btnGenerateKey: '生成随机密钥',
+                btnClear: '清空',
+                btnCopy: '复制结果',
+
+                // 表单标签
+                lblInputText: '输入文本',
+                lblTextToEncrypt: '待加密文本',
+                lblTextToDecrypt: '待解密文本',
+                lblKey: '密钥',
+                lblKeyFormat: '密钥格式',
+                lblKeySize: '密钥位数',
+                lblIV: 'IV（偏移向量）',
+                lblIVOptional: 'IV（偏移向量）- 可选，留空自动生成',
+                lblIVFormat: 'IV 格式',
+                lblCipherMode: '加密模式',
+                lblPadding: '填充方式',
+                lblOutputEncoding: '输出编码',
+                lblInputEncoding: '输入编码',
+                lblPassword: '密码',
+                lblSalt: '盐值 (Salt)',
+                lblIterations: '迭代次数',
+                lblOutputLength: '输出长度（位）',
+                lblHashAlgo: '哈希算法',
+                lblDerivedKeySize: '输出密钥位数',
+
+                // 格式
+                formatString: '字符串',
+                formatHex: 'Hex（十六进制）',
+                formatHexShort: 'Hex',
+                formatBase64: 'Base64',
+                formatUtf8: '字符串',
+                formatLatin1: 'Latin1',
+
+                // 模式
+                modeCBC: 'CBC（推荐）',
+                modeECB: 'ECB（不安全）',
+                modeCBCShort: 'CBC',
+
+                // 加密模式描述
+                cipherCBC: '密码分组链接模式',
+                cipherECB: '电子密码本模式（不推荐）',
+                cipherCFB: '密码反馈模式',
+                cipherOFB: '输出反馈模式',
+                cipherCTR: '计数器模式',
+
+                // 填充描述
+                padPkcs7: 'PKCS#7 填充（最常用）',
+                padZero: '零填充',
+                padNone: '无填充（数据需为块大小的倍数）',
+                padIso: 'ISO/IEC 9797-1 填充',
+                padAnsi: 'ANSI X.923 填充',
+
+                // 输出
+                outputResult: '输出结果',
+
+                // 高级设置
+                advancedSettings: '高级设置',
+
+                // 信息提示
+                infoFormat: '格式',
+                infoBits: '位数',
+                infoActualLength: '实际长度',
+                infoMismatch: '⚠️ 与设置不符',
+                infoParseError: '解析错误',
+                infoRecommend128: '⚠️ 建议128位',
+
+                // Toast
+                toastCopied: '已复制到剪贴板',
+                toastNoContent: '没有可复制的内容',
+                toastThemeLight: '已切换到亮色主题',
+                toastThemeDark: '已切换到暗色主题',
+                toastLangZh: '已切换到中文',
+                toastLangEn: 'Switched to English',
+
+                // 占位符
+                placeholderKey: '输入密钥（留空自动生成）',
+                placeholderIV: '留空自动生成',
+                placeholderInput: '输入要处理的文本...',
+                placeholderPassword: '输入密码',
+                placeholderSalt: '输入盐值（可选）',
+
+                // 错误
+                errorInputKey: '请输入密钥',
+                errorInputText: '请输入文本',
+
+                // 综合转换
+                universalTitle: '综合转换',
+                universalDesc: '自动识别输入格式（UTF-8、Hex、Base64、Inline、C-Array、Python），并输出所有其他格式。',
+                universalInput: '输入数据（自动识别格式）',
+                universalPlaceholder: '粘贴任意格式的数据，自动识别...',
+                universalSupported: '支持的输入格式：',
+                universalUTF8: 'UTF-8 字符串 - 普通文本',
+                universalHex: 'Hex - 十六进制（如：48656c6c6f）',
+                universalBase64: 'Base64 - Base64编码',
+                universalInline: 'Inline - 如：\\x48\\x65\\x6c\\x6c\\x6f',
+                universalCArray: 'C-Array - 如：unsigned char data[] = { 0x48, 0x65, 0x6C };',
+                universalPython: 'Python - 如：data = [ 0x48, 0x65, 0x6C ]',
+
+                // 综合转换输出
+                detectedFormat: '检测到输入格式',
+                dataLength: '数据长度',
+                bytes: '字节',
+                outputUTF8: 'UTF-8 字符串',
+                outputHex: 'Hex (十六进制)',
+                outputBase64: 'Base64',
+                outputInline: 'Inline',
+                outputCArray: 'C-Array',
+                outputPython: 'Python',
+                outputByteSummary: '字节摘要',
+                firstBytes: '前16字节',
+                lastBytes: '后16字节',
+                notPrintable: '(包含不可打印字符)',
+                cannotConvert: '(无法转换)',
+                unrecognized: '无法识别输入格式',
+
+                // 加密结果
+                encResult: '加密结果',
+                encKey: '密钥',
+                encIV: 'IV',
+                encMode: '加密模式',
+                encPadding: '填充方式',
+                encKeyAuto: '⚠️ 已自动生成密钥，请妥善保存上述密钥和 IV 信息！',
+                encKeyAutoNoIV: '⚠️ 已自动生成密钥，请妥善保存！',
+
+                // 哈希
+                hashValue: '哈希值',
+                hashLength: '长度',
+
+                // 警告
+                warnDES: '⚠️ DES 算法安全性较低（56位密钥易被破解），建议使用 AES 替代。',
+                warnMD5: '⚠️ 此算法已不推荐用于安全场景，仅适用于数据校验。',
+                warnRC4: '⚠️ RC4 存在已知漏洞，不建议用于新的安全系统。',
+
+                // 算法名称
+                algoAES: 'AES',
+                algoDES: 'DES',
+                algoTripleDES: 'TripleDES',
+                algoBlowfish: 'Blowfish',
+                algoRabbit: 'Rabbit',
+                algoRC4: 'RC4',
+                algoRC4Drop: 'RC4Drop',
+                algoMD5: 'MD5',
+                algoSHA1: 'SHA-1',
+                algoSHA224: 'SHA-224',
+                algoSHA256: 'SHA-256',
+                algoSHA384: 'SHA-384',
+                algoSHA512: 'SHA-512',
+                algoSHA3: 'SHA-3',
+                algoRIPEMD160: 'RIPEMD-160',
+                algoHMAC: 'HMAC',
+                algoBase64: 'Base64',
+                algoHex: 'Hex 编码',
+                algoLatin1: 'Latin1 编码',
+                algoUtf8: 'UTF-8 编码',
+                algoUniversalConvert: '综合转换',
+                algoPBKDF2: 'PBKDF2',
+                algoEvpKDF: 'EvpKDF',
+
+                // 算法徽章
+                badge对称加密: '对称加密',
+                badge哈希算法: '哈希算法',
+                badge消息认证: '消息认证',
+                badge编码工具: '编码工具',
+                badge密钥派生: '密钥派生',
+
+                // 算法描述
+                descAES: '高级加密标准，目前最流行的对称加密算法之一，安全可靠。',
+                descDES: '数据加密标准，较老的对称加密算法，安全性较低，建议使用 AES。',
+                descTripleDES: '三重 DES，比 DES 更安全，但速度较慢。',
+                descBlowfish: 'Blowfish 是一种快速、安全的对称加密算法，密钥长度可变。',
+                descRabbit: '高性能流密码算法，速度快，适合实时加密。',
+                descRC4: '流密码算法，简单快速，但安全性较低。',
+                descRC4Drop: 'RC4 的改进版本，丢弃初始输出以提高安全性。',
+                descMD5: '消息摘要算法第五版，产生128位哈希值。已不推荐用于安全场景。',
+                descSHA1: '安全哈希算法第一版，产生160位哈希值。已逐渐被淘汰。',
+                descSHA224: 'SHA-2 系列算法，产生224位哈希值。',
+                descSHA256: 'SHA-2 系列算法，产生256位哈希值，广泛使用。',
+                descSHA384: 'SHA-2 系列算法，产生384位哈希值。',
+                descSHA512: 'SHA-2 系列算法，产生512位哈希值，安全性高。',
+                descSHA3: '新一代安全哈希算法，基于 Keccak 结构。',
+                descRIPEMD160: 'RIPEMD 系列哈希算法，产生160位哈希值。',
+                descHMAC: '基于哈希的消息认证码，用于验证数据完整性和真实性。',
+                descBase64: 'Base64 编码/解码，常用于数据传输。',
+                descHex: '十六进制编码/解码，将文本转换为十六进制表示。',
+                descLatin1: 'Latin1 (ISO-8859-1) 编码/解码。',
+                descUtf8: 'UTF-8 字节编码查看，显示文本的 UTF-8 字节表示。',
+                descUniversalConvert: '自动识别输入格式（UTF-8、Hex、Base64、Inline、C-Array、Python），并输出所有其他格式。',
+                descPBKDF2: '基于密码的密钥派生函数，用于从密码生成加密密钥。',
+                descEvpKDF: 'OpenSSL EVP 密钥派生函数，常用于 OpenSSL 兼容的密钥生成。',
+            },
+            en: {
+                // Title
+                title: 'Online Encryption Tool',
+                subtitle: 'Frontend encryption tool based on Crypto.js, data never leaves your browser',
+                footer1: 'All encryption/decryption operations are performed locally in your browser',
+                footer2: 'Powered by',
+
+                // Categories
+                catSymmetric: 'Symmetric',
+                catHash: 'Hash',
+                catHMAC: 'HMAC',
+                catEncoding: 'Encoding',
+                catKDF: 'Key Derivation',
+
+                // Buttons
+                btnEncrypt: 'Encrypt / Encode',
+                btnDecrypt: 'Decrypt / Decode',
+                btnProcess: 'Encrypt',
+                btnProcessDecrypt: 'Decrypt',
+                btnCalculate: 'Calculate',
+                btnConvert: 'Convert',
+                btnGenerateKey: 'Generate Random Key',
+                btnClear: 'Clear',
+                btnCopy: 'Copy Result',
+
+                // Form labels
+                lblInputText: 'Input Text',
+                lblTextToEncrypt: 'Text to Encrypt',
+                lblTextToDecrypt: 'Text to Decrypt',
+                lblKey: 'Key',
+                lblKeyFormat: 'Key Format',
+                lblKeySize: 'Key Size',
+                lblIV: 'IV (Initialization Vector)',
+                lblIVOptional: 'IV - Optional, leave empty for auto generation',
+                lblIVFormat: 'IV Format',
+                lblCipherMode: 'Cipher Mode',
+                lblPadding: 'Padding',
+                lblOutputEncoding: 'Output Encoding',
+                lblInputEncoding: 'Input Encoding',
+                lblPassword: 'Password',
+                lblSalt: 'Salt',
+                lblIterations: 'Iterations',
+                lblOutputLength: 'Output Length (bits)',
+                lblHashAlgo: 'Hash Algorithm',
+                lblDerivedKeySize: 'Derived Key Size',
+
+                // Format
+                formatString: 'String',
+                formatHex: 'Hex (Hexadecimal)',
+                formatHexShort: 'Hex',
+                formatBase64: 'Base64',
+                formatUtf8: 'String',
+                formatLatin1: 'Latin1',
+
+                // Mode
+                modeCBC: 'CBC (Recommended)',
+                modeECB: 'ECB (Insecure)',
+
+                // Cipher mode descriptions
+                cipherCBC: 'Cipher Block Chaining',
+                cipherECB: 'Electronic Codebook (Not recommended)',
+                cipherCFB: 'Cipher Feedback',
+                cipherOFB: 'Output Feedback',
+                cipherCTR: 'Counter',
+
+                // Padding descriptions
+                padPkcs7: 'PKCS#7 Padding (Most common)',
+                padZero: 'Zero Padding',
+                padNone: 'No Padding (Data must be multiple of block size)',
+                padIso: 'ISO/IEC 9797-1 Padding',
+                padAnsi: 'ANSI X.923 Padding',
+
+                // Output
+                outputResult: 'Output Result',
+
+                // Advanced
+                advancedSettings: 'Advanced Settings',
+
+                // Info
+                infoFormat: 'Format',
+                infoBits: 'Bits',
+                infoActualLength: 'Actual Length',
+                infoMismatch: '⚠️ Mismatch',
+                infoParseError: 'Parse Error',
+                infoRecommend128: '⚠️ Recommend 128 bits',
+
+                // Toast
+                toastCopied: 'Copied to clipboard',
+                toastNoContent: 'Nothing to copy',
+                toastThemeLight: 'Switched to light theme',
+                toastThemeDark: 'Switched to dark theme',
+                toastLangZh: '已切换到中文',
+                toastLangEn: 'Switched to English',
+
+                // Placeholder
+                placeholderKey: 'Enter key (leave empty for auto generation)',
+                placeholderIV: 'Leave empty for auto generation',
+                placeholderInput: 'Enter text to process...',
+                placeholderPassword: 'Enter password',
+                placeholderSalt: 'Enter salt (optional)',
+
+                // Error
+                errorInputKey: 'Please enter a key',
+                errorInputText: 'Please enter text',
+
+                // Universal Convert
+                universalTitle: 'Universal Converter',
+                universalDesc: 'Auto-detect input format (UTF-8, Hex, Base64, Inline, C-Array, Python) and output all other formats.',
+                universalInput: 'Input Data (Auto-detect format)',
+                universalPlaceholder: 'Paste data in any format, auto-detect...',
+                universalSupported: 'Supported input formats:',
+                universalUTF8: 'UTF-8 String - Plain text',
+                universalHex: 'Hex - Hexadecimal (e.g., 48656c6c6f)',
+                universalBase64: 'Base64 - Base64 encoded',
+                universalInline: 'Inline - e.g., \\x48\\x65\\x6c\\x6c\\x6f',
+                universalCArray: 'C-Array - e.g., unsigned char data[] = { 0x48, 0x65, 0x6C };',
+                universalPython: 'Python - e.g., data = [ 0x48, 0x65, 0x6C ]',
+
+                // Universal output
+                detectedFormat: 'Detected format',
+                dataLength: 'Data length',
+                bytes: 'bytes',
+                outputUTF8: 'UTF-8 String',
+                outputHex: 'Hex (Hexadecimal)',
+                outputBase64: 'Base64',
+                outputInline: 'Inline',
+                outputCArray: 'C-Array',
+                outputPython: 'Python',
+                outputByteSummary: 'Byte Summary',
+                firstBytes: 'First 16 bytes',
+                lastBytes: 'Last 16 bytes',
+                notPrintable: '(Contains non-printable characters)',
+                cannotConvert: '(Cannot convert)',
+                unrecognized: 'Unrecognized input format',
+
+                // Encryption result
+                encResult: 'Encryption Result',
+                encKey: 'Key',
+                encIV: 'IV',
+                encMode: 'Cipher Mode',
+                encPadding: 'Padding',
+                encKeyAuto: '⚠️ Key auto-generated, please save the key and IV above!',
+                encKeyAutoNoIV: '⚠️ Key auto-generated, please save it!',
+
+                // Hash
+                hashValue: 'Hash Value',
+                hashLength: 'Length',
+
+                // Warnings
+                warnDES: '⚠️ DES is insecure (56-bit key can be cracked), recommend using AES instead.',
+                warnMD5: '⚠️ This algorithm is not recommended for security purposes, only for data checksums.',
+                warnRC4: '⚠️ RC4 has known vulnerabilities, not recommended for new security systems.',
+
+                // Algorithm names
+                algoAES: 'AES',
+                algoDES: 'DES',
+                algoTripleDES: 'TripleDES',
+                algoBlowfish: 'Blowfish',
+                algoRabbit: 'Rabbit',
+                algoRC4: 'RC4',
+                algoRC4Drop: 'RC4Drop',
+                algoMD5: 'MD5',
+                algoSHA1: 'SHA-1',
+                algoSHA224: 'SHA-224',
+                algoSHA256: 'SHA-256',
+                algoSHA384: 'SHA-384',
+                algoSHA512: 'SHA-512',
+                algoSHA3: 'SHA-3',
+                algoRIPEMD160: 'RIPEMD-160',
+                algoHMAC: 'HMAC',
+                algoBase64: 'Base64',
+                algoHex: 'Hex Encode',
+                algoLatin1: 'Latin1 Encode',
+                algoUtf8: 'UTF-8 Encode',
+                algoUniversalConvert: 'Universal Converter',
+                algoPBKDF2: 'PBKDF2',
+                algoEvpKDF: 'EvpKDF',
+
+                // Algorithm badges
+                badge对称加密: 'Symmetric',
+                badge哈希算法: 'Hash',
+                badge消息认证: 'Message Auth',
+                badge编码工具: 'Encoding',
+                badge密钥派生: 'Key Derivation',
+
+                // Algorithm descriptions
+                descAES: 'Advanced Encryption Standard, one of the most popular symmetric encryption algorithms, secure and reliable.',
+                descDES: 'Data Encryption Standard, older symmetric algorithm with lower security, recommend using AES.',
+                descTripleDES: 'Triple DES, more secure than DES but slower.',
+                descBlowfish: 'Blowfish is a fast, secure symmetric encryption algorithm with variable key length.',
+                descRabbit: 'High-performance stream cipher, fast and suitable for real-time encryption.',
+                descRC4: 'Stream cipher, simple and fast, but with lower security.',
+                descRC4Drop: 'Improved RC4 version, discards initial output for better security.',
+                descMD5: 'Message Digest Algorithm 5, produces 128-bit hash. Not recommended for security purposes.',
+                descSHA1: 'Secure Hash Algorithm 1, produces 160-bit hash. Being phased out.',
+                descSHA224: 'SHA-2 family algorithm, produces 224-bit hash.',
+                descSHA256: 'SHA-2 family algorithm, produces 256-bit hash, widely used.',
+                descSHA384: 'SHA-2 family algorithm, produces 384-bit hash.',
+                descSHA512: 'SHA-2 family algorithm, produces 512-bit hash, highly secure.',
+                descSHA3: 'New generation secure hash algorithm, based on Keccak structure.',
+                descRIPEMD160: 'RIPEMD family hash algorithm, produces 160-bit hash.',
+                descHMAC: 'Hash-based Message Authentication Code, for data integrity and authenticity verification.',
+                descBase64: 'Base64 encode/decode, commonly used for data transmission.',
+                descHex: 'Hexadecimal encode/decode, converts text to hex representation.',
+                descLatin1: 'Latin1 (ISO-8859-1) encode/decode.',
+                descUtf8: 'UTF-8 byte encoding viewer, displays UTF-8 byte representation.',
+                descUniversalConvert: 'Auto-detect input format (UTF-8, Hex, Base64, Inline, C-Array, Python) and output all other formats.',
+                descPBKDF2: 'Password-based key derivation function, generates encryption keys from passwords.',
+                descEvpKDF: 'OpenSSL EVP key derivation function, compatible with OpenSSL key generation.',
+            }
+        };
+
+        // 获取当前语言
+        function getLang() {
+            return document.documentElement.getAttribute('data-lang') || 'zh';
+        }
+
+        // 翻译函数
+        function t(key) {
+            const lang = getLang();
+            return i18n[lang][key] || i18n['zh'][key] || key;
+        }
+
+        // 加密模式配置
+        const cipherModes = {
+            CBC: { name: 'CBC', needsIv: true, desc: '密码分组链接模式' },
+            ECB: { name: 'ECB', needsIv: false, desc: '电子密码本模式（不推荐）' },
+            CFB: { name: 'CFB', needsIv: true, desc: '密码反馈模式' },
+            OFB: { name: 'OFB', needsIv: true, desc: '输出反馈模式' },
+            CTR: { name: 'CTR', needsIv: true, desc: '计数器模式' }
+        };
+
+        // 填充方式配置
+        const paddingModes = {
+            Pkcs7: { name: 'Pkcs7', desc: 'PKCS#7 填充（最常用）' },
+            ZeroPadding: { name: 'ZeroPadding', desc: '零填充' },
+            NoPadding: { name: 'NoPadding', desc: '无填充（数据需为块大小的倍数）' },
+            Iso97971: { name: 'Iso97971', desc: 'ISO/IEC 9797-1 填充' },
+            AnsiX923: { name: 'AnsiX923', desc: 'ANSI X.923 填充' }
+        };
+
+        // 密钥格式配置
+        const keyFormats = {
+            Utf8: { name: '字符串', enc: CryptoJS.enc.Utf8, desc: '普通文本字符串' },
+            Hex: { name: 'Hex', enc: CryptoJS.enc.Hex, desc: '十六进制格式' },
+            Base64: { name: 'Base64', enc: CryptoJS.enc.Base64, desc: 'Base64 编码格式' },
+            Latin1: { name: 'Latin1', enc: CryptoJS.enc.Latin1, desc: 'Latin1 编码格式' }
+        };
+
+        // 算法支持的密钥位数
+        const keySizes = {
+            AES: [128, 192, 256],
+            DES: [56],
+            TripleDES: [168, 112],
+            Blowfish: [128, 192, 256, 384, 448],
+            Rabbit: [128],
+            RC4: [40, 128, 256],
+            RC4Drop: [40, 128, 256]
+        };
+
+        // 算法配置
+        const algorithms = {
+            AES: {
+                name: 'AES',
+                badge: '对称加密',
+                description: '高级加密标准，目前最流行的对称加密算法之一，安全可靠。',
+                hasDecrypt: true,
+                needsKey: true,
+                supportsMode: true,
+                supportsPadding: true,
+                defaultMode: 'CBC',
+                defaultPadding: 'Pkcs7',
+                defaultKeySize: 256
+            },
+            DES: {
+                name: 'DES',
+                badge: '对称加密',
+                description: '数据加密标准，较老的对称加密算法，安全性较低，建议使用 AES。',
+                hasDecrypt: true,
+                needsKey: true,
+                supportsMode: true,
+                supportsPadding: true,
+                defaultMode: 'CBC',
+                defaultPadding: 'Pkcs7',
+                defaultKeySize: 56
+            },
+            TripleDES: {
+                name: 'TripleDES',
+                badge: '对称加密',
+                description: '三重 DES，比 DES 更安全，但速度较慢。',
+                hasDecrypt: true,
+                needsKey: true,
+                supportsMode: true,
+                supportsPadding: true,
+                defaultMode: 'CBC',
+                defaultPadding: 'Pkcs7',
+                defaultKeySize: 168
+            },
+            Blowfish: {
+                name: 'Blowfish',
+                badge: '对称加密',
+                description: 'Blowfish 是一种快速、安全的对称加密算法，密钥长度可变。',
+                hasDecrypt: true,
+                needsKey: true,
+                supportsMode: true,
+                supportsPadding: true,
+                defaultMode: 'CBC',
+                defaultPadding: 'Pkcs7',
+                defaultKeySize: 128
+            },
+            Rabbit: {
+                name: 'Rabbit',
+                badge: '对称加密',
+                description: '高性能流密码算法，速度快，适合实时加密。',
+                hasDecrypt: true,
+                needsKey: true,
+                supportsMode: false,
+                supportsPadding: false,
+                defaultKeySize: 128
+            },
+            RC4: {
+                name: 'RC4',
+                badge: '对称加密',
+                description: '流密码算法，简单快速，但安全性较低。',
+                hasDecrypt: true,
+                needsKey: true,
+                supportsMode: false,
+                supportsPadding: false,
+                defaultKeySize: 128
+            },
+            RC4Drop: {
+                name: 'RC4Drop',
+                badge: '对称加密',
+                description: 'RC4 的改进版本，丢弃初始输出以提高安全性。',
+                hasDecrypt: true,
+                needsKey: true,
+                supportsMode: false,
+                supportsPadding: false,
+                defaultKeySize: 128
+            },
+            MD5: {
+                name: 'MD5',
+                badge: '哈希算法',
+                description: '消息摘要算法第五版，产生128位哈希值。已不推荐用于安全场景。',
+                hasDecrypt: false,
+                needsKey: false
+            },
+            SHA1: {
+                name: 'SHA-1',
+                badge: '哈希算法',
+                description: '安全哈希算法第一版，产生160位哈希值。已逐渐被淘汰。',
+                hasDecrypt: false,
+                needsKey: false
+            },
+            SHA224: {
+                name: 'SHA-224',
+                badge: '哈希算法',
+                description: 'SHA-2 系列算法，产生224位哈希值。',
+                hasDecrypt: false,
+                needsKey: false
+            },
+            SHA256: {
+                name: 'SHA-256',
+                badge: '哈希算法',
+                description: 'SHA-2 系列算法，产生256位哈希值，广泛使用。',
+                hasDecrypt: false,
+                needsKey: false
+            },
+            SHA384: {
+                name: 'SHA-384',
+                badge: '哈希算法',
+                description: 'SHA-2 系列算法，产生384位哈希值。',
+                hasDecrypt: false,
+                needsKey: false
+            },
+            SHA512: {
+                name: 'SHA-512',
+                badge: '哈希算法',
+                description: 'SHA-2 系列算法，产生512位哈希值，安全性高。',
+                hasDecrypt: false,
+                needsKey: false
+            },
+            SHA3: {
+                name: 'SHA-3',
+                badge: '哈希算法',
+                description: '新一代安全哈希算法，基于 Keccak 结构。',
+                hasDecrypt: false,
+                needsKey: false,
+                needsOutputLength: true
+            },
+            RIPEMD160: {
+                name: 'RIPEMD-160',
+                badge: '哈希算法',
+                description: 'RIPEMD 系列哈希算法，产生160位哈希值。',
+                hasDecrypt: false,
+                needsKey: false
+            },
+            HMAC: {
+                name: 'HMAC',
+                badge: '消息认证',
+                description: '基于哈希的消息认证码，用于验证数据完整性和真实性。',
+                hasDecrypt: false,
+                needsKey: true,
+                needsHashAlgo: true
+            },
+            Base64: {
+                name: 'Base64',
+                badge: '编码工具',
+                description: 'Base64 编码/解码，常用于数据传输。',
+                hasDecrypt: true,
+                needsKey: false,
+                encodeFunc: (text) => CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(text)),
+                decodeFunc: (text) => CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Base64.parse(text))
+            },
+            Hex: {
+                name: 'Hex 编码',
+                badge: '编码工具',
+                description: '十六进制编码/解码，将文本转换为十六进制表示。',
+                hasDecrypt: true,
+                needsKey: false,
+                encodeFunc: (text) => CryptoJS.enc.Hex.stringify(CryptoJS.enc.Utf8.parse(text)),
+                decodeFunc: (hex) => CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hex))
+            },
+            Latin1: {
+                name: 'Latin1 编码',
+                badge: '编码工具',
+                description: 'Latin1 (ISO-8859-1) 编码/解码。',
+                hasDecrypt: true,
+                needsKey: false,
+                encodeFunc: (text) => CryptoJS.enc.Latin1.stringify(CryptoJS.enc.Utf8.parse(text)),
+                decodeFunc: (text) => CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Latin1.parse(text))
+            },
+            UniversalConvert: {
+                name: '综合转换',
+                badge: '编码工具',
+                description: '自动识别输入格式（UTF-8、Hex、Base64、Inline、C-Array、Python），并输出所有其他格式。',
+                hasDecrypt: false,
+                needsKey: false,
+                isUniversal: true
+            },
+            Utf8: {
+                name: 'UTF-8 编码',
+                badge: '编码工具',
+                description: 'UTF-8 字节编码查看，显示文本的 UTF-8 字节表示。',
+                hasDecrypt: true,
+                needsKey: false,
+                encodeFunc: (text) => {
+                    const bytes = CryptoJS.enc.Utf8.parse(text);
+                    return `UTF-8 字节 (Hex): ${CryptoJS.enc.Hex.stringify(bytes)}\n字节长度: ${bytes.sigBytes} bytes`;
+                },
+                decodeFunc: (hex) => CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Hex.parse(hex.replace(/^UTF-8 字节 \(Hex\): /, '').split('\n')[0]))
+            },
+            PBKDF2: {
+                name: 'PBKDF2',
+                badge: '密钥派生',
+                description: '基于密码的密钥派生函数，用于从密码生成加密密钥。',
+                hasDecrypt: false,
+                needsKey: false,
+                needsPassword: true,
+                needsSalt: true,
+                needsIterations: true,
+                needsKeySize: true,
+                needsHashAlgo: true
+            },
+            EvpKDF: {
+                name: 'EvpKDF',
+                badge: '密钥派生',
+                description: 'OpenSSL EVP 密钥派生函数，常用于 OpenSSL 兼容的密钥生成。',
+                hasDecrypt: false,
+                needsKey: false,
+                needsPassword: true,
+                needsSalt: true,
+                needsKeySize: true
+            }
+        };
+
+        let currentAlgo = 'AES';
+        let currentMode = 'encrypt';
+        const formDataCache = {}; // 表单数据缓存，按算法+模式分开存储
+
+        // 获取缓存键（算法+模式）
+        function getCacheKey() {
+            return `${currentAlgo}_${currentMode}`;
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 使用在渲染前设置的语言
+            const lang = window.__initialLang || 'zh';
+            document.documentElement.setAttribute('data-lang', lang);
+
+            // 设置图标状态
+            const theme = document.documentElement.getAttribute('data-theme');
+            document.getElementById('lang-icon').textContent = lang === 'zh' ? 'EN' : '中';
+            document.getElementById('theme-icon').textContent = theme === 'light' ? '🌙' : '☀️';
+
+            updateStaticText();
+            renderWorkspace('AES');
+            bindEvents();
+        });
+
+        // 绑定事件
+        function bindEvents() {
+            document.querySelectorAll('.algorithm-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // 保存当前算法的数据
+                    saveFormData();
+
+                    document.querySelectorAll('.algorithm-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentAlgo = btn.dataset.algo;
+                    currentMode = 'encrypt';
+                    renderWorkspace(currentAlgo);
+
+                    // 恢复该算法之前保存的数据
+                    setTimeout(() => restoreFormData(), 0);
+                });
+            });
+        }
+
+        // 渲染工作区
+        function renderWorkspace(algoName) {
+            const algo = algorithms[algoName];
+            const workspace = document.getElementById('workspace');
+
+            // 获取算法名称和徽章的翻译
+            const algoNameTranslated = t('algo' + algoName) || algo.name;
+            const algoBadgeTranslated = t('badge' + algo.badge.replace(/\s/g, '')) || algo.badge;
+
+            let html = `
+                <h2>${algoNameTranslated} <span class="badge">${algoBadgeTranslated}</span></h2>
+                <p class="description">${t('desc' + algoName) || algo.description}</p>
+            `;
+
+            // 安全警告
+            if (algoName === 'DES') {
+                html += `<div class="warning-box">${t('warnDES')}</div>`;
+            } else if (algoName === 'MD5' || algoName === 'SHA1') {
+                html += `<div class="warning-box">${t('warnMD5')}</div>`;
+            } else if (algoName === 'RC4') {
+                html += `<div class="warning-box">${t('warnRC4')}</div>`;
+            }
+
+            // 综合转换说明
+            if (algoName === 'UniversalConvert') {
+                html += `
+                    <div class="info-box">
+                        <strong>${t('universalSupported')}</strong><br>
+                        • ${t('universalUTF8')}<br>
+                        • ${t('universalHex')}<br>
+                        • ${t('universalBase64')}<br>
+                        • ${t('universalInline')}<br>
+                        • ${t('universalCArray')}<br>
+                        • ${t('universalPython')}
+                    </div>
+                `;
+            }
+
+            // 模式切换
+            if (algo.hasDecrypt) {
+                html += `
+                    <div class="mode-toggle" id="modeToggle">
+                        <button type="button" class="mode-btn ${currentMode === 'encrypt' ? 'active' : ''}" onclick="switchMode('encrypt')">${t('btnEncrypt')}</button>
+                        <button type="button" class="mode-btn ${currentMode === 'decrypt' ? 'active' : ''}" onclick="switchMode('decrypt')">${t('btnDecrypt')}</button>
+                    </div>
+                `;
+            }
+
+            const inputLabel = algo.isUniversal ? t('universalInput') :
+                (algo.hasDecrypt ? (currentMode === 'encrypt' ? t('lblTextToEncrypt') : t('lblTextToDecrypt')) : t('lblInputText'));
+            html += `<div class="form-group"><label>${inputLabel}</label>`;
+            html += `<textarea id="inputText" placeholder="${algo.isUniversal ? t('universalPlaceholder') : t('placeholderInput')}"></textarea></div>`;
+
+            // 对称加密高级设置
+            if (algo.needsKey && algo.supportsMode) {
+                html += `
+                    <div class="advanced-section">
+                        <h4 class="collapsible" onclick="toggleCollapsible(this)">${t('advancedSettings')}</h4>
+                        <div class="collapsible-content open">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>${t('encMode')}</label>
+                                    <select id="cipherMode" onchange="updateIvRequirement()">
+                                        <option value="CBC" ${algo.defaultMode === 'CBC' ? 'selected' : ''}>${t('modeCBC')}</option>
+                                        <option value="ECB" ${algo.defaultMode === 'ECB' ? 'selected' : ''}>${t('modeECB')}</option>
+                                        <option value="CFB">CFB</option>
+                                        <option value="OFB">OFB</option>
+                                        <option value="CTR">CTR</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>${t('lblPadding')}</label>
+                                    <select id="paddingMode">
+                                        <option value="Pkcs7" ${algo.defaultPadding === 'Pkcs7' ? 'selected' : ''}>${t('padPkcs7')}</option>
+                                        <option value="ZeroPadding">${t('padZero')}</option>
+                                        <option value="NoPadding">${t('padNone')}</option>
+                                        <option value="Iso97971">${t('padIso')}</option>
+                                        <option value="AnsiX923">${t('padAnsi')}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 密钥设置
+            if (algo.needsKey) {
+                const sizes = keySizes[algoName] || [256];
+                html += `
+                    <div class="form-group">
+                        <label>${t('lblKey')}</label>
+                        <input type="text" id="keyInput" placeholder="${t('placeholderKey')}">
+                        <div class="key-info" id="keyInfo"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>${t('lblKeyFormat')}</label>
+                            <select id="keyFormat" onchange="updateKeyInfo()">
+                                <option value="Utf8">${t('formatString')}</option>
+                                <option value="Hex">${t('formatHex')}</option>
+                                <option value="Base64">${t('formatBase64')}</option>
+                                <option value="Latin1">Latin1</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>${t('lblKeySize')}</label>
+                            <select id="keySize" onchange="updateKeyInfo()">
+                                ${sizes.map(s => `<option value="${s}" ${s === algo.defaultKeySize ? 'selected' : ''}>${s} ${t('infoBits')}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                `;
+
+                // IV 设置（如果加密模式需要）
+                if (algo.supportsMode) {
+                    html += `
+                        <div class="form-group" id="ivGroup">
+                            <label>${t('lblIVOptional')}</label>
+                            <input type="text" id="ivInput" placeholder="${t('placeholderIV')}">
+                            <div class="key-info" id="ivInfo"></div>
+                            <div class="form-group" style="margin-top: 8px; margin-bottom: 0;">
+                                <label style="font-size: 0.85rem;">${t('lblIVFormat')}</label>
+                                <select id="ivFormat" onchange="updateIvInfo()">
+                                    <option value="Utf8">${t('formatString')}</option>
+                                    <option value="Hex">${t('formatHexShort')}</option>
+                                    <option value="Base64">${t('formatBase64')}</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            // PBKDF2/EvpKDF 设置
+            if (algo.needsPassword) {
+                html += `
+                    <div class="form-group">
+                        <label>${t('lblPassword')}</label>
+                        <input type="text" id="passwordInput" placeholder="${t('placeholderPassword')}">
+                    </div>
+                `;
+            }
+
+            if (algo.needsSalt) {
+                html += `
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>${t('lblSalt')}</label>
+                            <input type="text" id="saltInput" placeholder="${t('placeholderSalt')}">
+                        </div>
+                        <div class="form-group">
+                            <label>${t('lblSalt')}${t('infoFormat')}</label>
+                            <select id="saltFormat">
+                                <option value="Utf8">${t('formatString')}</option>
+                                <option value="Hex">${t('formatHexShort')}</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (algo.needsIterations) {
+                html += `
+                    <div class="form-group">
+                        <label>${t('lblIterations')}</label>
+                        <input type="number" id="iterationsInput" value="10000" min="1" max="1000000">
+                    </div>
+                `;
+            }
+
+            if (algo.needsKeySize && algoName === 'PBKDF2') {
+                html += `
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>${t('lblDerivedKeySize')}</label>
+                            <select id="derivedKeySize">
+                                <option value="128">128 ${t('infoBits')}</option>
+                                <option value="192">192 ${t('infoBits')}</option>
+                                <option value="256" selected>256 ${t('infoBits')}</option>
+                                <option value="384">384 ${t('infoBits')}</option>
+                                <option value="512">512 ${t('infoBits')}</option>
+                            </select>
+                        </div>
+                        ${algo.needsHashAlgo ? `
+                        <div class="form-group">
+                            <label>${t('lblHashAlgo')}</label>
+                            <select id="pbkdfHashAlgo">
+                                <option value="SHA256" selected>SHA-256</option>
+                                <option value="SHA512">SHA-512</option>
+                                <option value="SHA1">SHA-1</option>
+                            </select>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            if (algoName === 'EvpKDF') {
+                html += `
+                    <div class="form-group">
+                        <label>${t('lblDerivedKeySize')}</label>
+                        <select id="derivedKeySize">
+                            <option value="128">128 ${t('infoBits')}</option>
+                            <option value="192">192 ${t('infoBits')}</option>
+                            <option value="256" selected>256 ${t('infoBits')}</option>
+                        </select>
+                    </div>
+                `;
+            }
+
+            // SHA3 输出长度
+            if (algo.needsOutputLength) {
+                html += `
+                    <div class="form-group">
+                        <label>${t('lblOutputLength')}</label>
+                        <select id="outputLength">
+                            <option value="224">224</option>
+                            <option value="256">256</option>
+                            <option value="384">384</option>
+                            <option value="512" selected>512</option>
+                        </select>
+                    </div>
+                `;
+            }
+
+            // HMAC 哈希算法
+            if (algo.needsHashAlgo && algoName === 'HMAC') {
+                html += `
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>${t('lblKeyFormat')}</label>
+                            <select id="keyFormat">
+                                <option value="Utf8">${t('formatString')}</option>
+                                <option value="Hex">${t('formatHexShort')}</option>
+                                <option value="Base64">${t('formatBase64')}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>${t('lblHashAlgo')}</label>
+                            <select id="hashAlgo">
+                                <option value="SHA256">SHA-256</option>
+                                <option value="SHA512">SHA-512</option>
+                                <option value="SHA384">SHA-384</option>
+                                <option value="SHA224">SHA-224</option>
+                                <option value="SHA1">SHA-1</option>
+                                <option value="MD5">MD5</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 输入编码（解密时）
+            if (algo.hasDecrypt && algo.needsKey && currentMode === 'decrypt') {
+                html += `
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>${t('lblInputEncoding')}</label>
+                            <select id="inputEncoding">
+                                <option value="Base64">Base64</option>
+                                <option value="Hex">${t('formatHexShort')}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>${t('lblOutputEncoding')}</label>
+                            <select id="outputEncoding">
+                                <option value="Utf8">UTF-8</option>
+                                <option value="Hex">${t('formatHexShort')}</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 按钮行
+            const mainBtnText = algo.isUniversal ? t('btnConvert') :
+                (algo.hasDecrypt ? (currentMode === 'encrypt' ? t('btnProcess') : t('btnProcessDecrypt')) : t('btnCalculate'));
+            html += `
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="process()">
+                        ${mainBtnText}
+                    </button>
+                    ${algo.needsKey ? `<button class="btn btn-secondary" onclick="generateKey()">${t('btnGenerateKey')}</button>` : ''}
+                    <button class="btn btn-secondary" onclick="clearAll()">${t('btnClear')}</button>
+                </div>
+            `;
+
+            // 输出区域
+            html += `
+                <div class="output-section">
+                    <h4>${t('outputResult')}</h4>
+                    <div class="output-box" id="outputBox"></div>
+                    <button class="copy-btn" onclick="copyOutput()">${t('btnCopy')}</button>
+                </div>
+            `;
+
+            workspace.innerHTML = html;
+
+            // 初始化
+            if (algo.supportsMode) {
+                updateIvRequirement();
+            }
+            updateKeyInfo();
+            updateIvInfo();
+        }
+
+        // 切换折叠
+        function toggleCollapsible(el) {
+            const content = el.nextElementSibling;
+            content.classList.toggle('open');
+        }
+
+        // 更新 IV 显示
+        function updateIvRequirement() {
+            const modeSelect = document.getElementById('cipherMode');
+            const ivGroup = document.getElementById('ivGroup');
+            if (!modeSelect || !ivGroup) return;
+
+            const mode = modeSelect.value;
+            const needsIv = cipherModes[mode]?.needsIv;
+
+            if (needsIv) {
+                ivGroup.style.display = 'block';
+            } else {
+                ivGroup.style.display = 'none';
+            }
+        }
+
+        // 更新密钥信息显示
+        function updateKeyInfo() {
+            const keyInput = document.getElementById('keyInput');
+            const keyFormatSelect = document.getElementById('keyFormat');
+            const keySizeSelect = document.getElementById('keySize');
+            const keyInfo = document.getElementById('keyInfo');
+
+            if (!keyInfo) return;
+
+            const format = keyFormatSelect?.value || 'Utf8';
+            const size = keySizeSelect?.value || 256;
+            const key = keyInput?.value || '';
+
+            const formatName = t('format' + format) || keyFormats[format].name;
+            let infoHtml = `<span>${t('infoFormat')}: ${formatName}</span><span>${t('infoBits')}: ${size}</span>`;
+
+            if (key) {
+                try {
+                    const keyBytes = keyFormats[format].enc.parse(key);
+                    infoHtml += `<span>${t('infoActualLength')}: ${keyBytes.sigBytes * 8} ${t('infoBits')}</span>`;
+                    if (keyBytes.sigBytes * 8 !== parseInt(size)) {
+                        infoHtml += `<span style="color: #ff6b6b;">${t('infoMismatch')}</span>`;
+                    }
+                } catch (e) {
+                    infoHtml += `<span style="color: #ff6b6b;">${t('infoParseError')}</span>`;
+                }
+            }
+
+            keyInfo.innerHTML = infoHtml;
+        }
+
+        // 更新IV信息显示
+        function updateIvInfo() {
+            const ivInput = document.getElementById('ivInput');
+            const ivFormatSelect = document.getElementById('ivFormat');
+            const ivInfo = document.getElementById('ivInfo');
+
+            if (!ivInfo) return;
+
+            const format = ivFormatSelect?.value || 'Utf8';
+            const iv = ivInput?.value || '';
+
+            const formatName = t('format' + format) || keyFormats[format].name;
+            let infoHtml = `<span>${t('infoFormat')}: ${formatName}</span>`;
+
+            if (iv) {
+                try {
+                    const ivBytes = keyFormats[format].enc.parse(iv);
+                    infoHtml += `<span>${t('infoActualLength')}: ${ivBytes.sigBytes * 8} ${t('infoBits')}</span>`;
+                    // IV通常需要16字节（128位）用于AES
+                    if (ivBytes.sigBytes !== 16) {
+                        infoHtml += `<span style="color: #ff6b6b;">${t('infoRecommend128')}</span>`;
+                    }
+                } catch (e) {
+                    infoHtml += `<span style="color: #ff6b6b;">${t('infoParseError')}</span>`;
+                }
+            }
+
+            ivInfo.innerHTML = infoHtml;
+        }
+
+        // 监听密钥和IV输入
+        document.addEventListener('input', (e) => {
+            if (e.target.id === 'keyInput') {
+                updateKeyInfo();
+            } else if (e.target.id === 'ivInput') {
+                updateIvInfo();
+            }
+        });
+
+        // 保存当前表单数据
+        function saveFormData() {
+            const cache = {};
+
+            try {
+                // 保存所有输入框和选择框的值
+                const inputs = document.querySelectorAll('#workspace input, #workspace textarea, #workspace select');
+                if (inputs) {
+                    inputs.forEach(el => {
+                        if (el && el.id) {
+                            cache[el.id] = el.value;
+                        }
+                    });
+                }
+
+                // 保存复选框状态
+                const checkboxes = document.querySelectorAll('#workspace input[type="checkbox"]');
+                if (checkboxes) {
+                    checkboxes.forEach(el => {
+                        if (el && el.id) {
+                            cache[el.id] = el.checked;
+                        }
+                    });
+                }
+
+                formDataCache[getCacheKey()] = cache;
+            } catch (e) {
+                console.error('saveFormData error:', e);
+            }
+        }
+
+        // 恢复表单数据
+        function restoreFormData() {
+            const cache = formDataCache[getCacheKey()];
+            if (!cache) return;
+
+            // 恢复所有输入框和选择框的值
+            Object.keys(cache).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (el.type === 'checkbox') {
+                        el.checked = cache[id];
+                    } else {
+                        el.value = cache[id];
+                    }
+                }
+            });
+
+            // 更新相关显示
+            updateKeyInfo();
+            updateIvRequirement();
+            updateIvInfo();
+        }
+
+        // 切换模式
+        function switchMode(mode) {
+            // 保存当前数据
+            saveFormData();
+            currentMode = mode;
+            renderWorkspace(currentAlgo);
+            // 恢复数据
+            setTimeout(() => restoreFormData(), 0);
+        }
+
+        // 清空
+        function clearAll() {
+            document.getElementById('inputText').value = '';
+            const keyInput = document.getElementById('keyInput');
+            if (keyInput) keyInput.value = '';
+            const ivInput = document.getElementById('ivInput');
+            if (ivInput) ivInput.value = '';
+            document.getElementById('outputBox').textContent = '';
+            updateKeyInfo();
+            // 清除当前算法+模式的缓存
+            delete formDataCache[getCacheKey()];
+        }
+
+        // 生成随机密钥
+        function generateKey() {
+            const keySizeSelect = document.getElementById('keySize');
+            const keyFormatSelect = document.getElementById('keyFormat');
+            const keyInput = document.getElementById('keyInput');
+
+            const size = parseInt(keySizeSelect?.value || 256);
+            const format = keyFormatSelect?.value || 'Utf8';
+
+            const keyBytes = CryptoJS.lib.WordArray.random(size / 8);
+
+            if (format === 'Hex') {
+                keyInput.value = keyBytes.toString(CryptoJS.enc.Hex);
+            } else if (format === 'Base64') {
+                keyInput.value = keyBytes.toString(CryptoJS.enc.Base64);
+            } else {
+                // 对于字符串格式，生成一个随机字符串
+                keyInput.value = keyBytes.toString(CryptoJS.enc.Base64).substring(0, size / 8);
+            }
+
+            // 也生成 IV
+            const ivInput = document.getElementById('ivInput');
+            const ivFormatSelect = document.getElementById('ivFormat');
+            if (ivInput && ivFormatSelect) {
+                const ivBytes = CryptoJS.lib.WordArray.random(16);
+                const ivFormat = ivFormatSelect.value;
+                if (ivFormat === 'Hex') {
+                    ivInput.value = ivBytes.toString(CryptoJS.enc.Hex);
+                } else if (ivFormat === 'Base64') {
+                    ivInput.value = ivBytes.toString(CryptoJS.enc.Base64);
+                } else {
+                    ivInput.value = ivBytes.toString(CryptoJS.enc.Base64).substring(0, 16);
+                }
+            }
+
+            updateKeyInfo();
+            showToast('已生成随机密钥');
+        }
+
+        // 处理加密/解密/哈希
+        function process() {
+            try {
+                const algo = algorithms[currentAlgo];
+                const inputTextEl = document.getElementById('inputText');
+                const outputBox = document.getElementById('outputBox');
+
+                if (!inputTextEl || !outputBox) {
+                    alert('找不到输入元素');
+                    return;
+                }
+
+                const inputText = inputTextEl.value;
+
+                if (!inputText.trim()) {
+                    outputBox.textContent = '请输入文本';
+                    outputBox.classList.add('error');
+                    return;
+                }
+
+                outputBox.classList.remove('error');
+
+                let result;
+
+                if (algo.encodeFunc && currentMode === 'encrypt') {
+                    result = algo.encodeFunc(inputText);
+                } else if (algo.decodeFunc && currentMode === 'decrypt') {
+                    result = algo.decodeFunc(inputText);
+                } else if (['AES', 'DES', 'TripleDES', 'Blowfish', 'Rabbit', 'RC4', 'RC4Drop'].includes(currentAlgo)) {
+                    result = processSymmetric(inputText, algo);
+                } else if (['MD5', 'SHA1', 'SHA224', 'SHA256', 'SHA384', 'SHA512', 'SHA3', 'RIPEMD160'].includes(currentAlgo)) {
+                    result = processHash(inputText);
+                } else if (currentAlgo === 'HMAC') {
+                    result = processHMAC(inputText);
+                } else if (currentAlgo === 'PBKDF2') {
+                    result = processPBKDF2();
+                } else if (currentAlgo === 'EvpKDF') {
+                    result = processEvpKDF();
+                } else if (currentAlgo === 'UniversalConvert') {
+                    result = processUniversalConvert(inputText);
+                }
+
+                outputBox.textContent = result;
+            } catch (e) {
+                console.error('process error:', e);
+                const outputBox = document.getElementById('outputBox');
+                if (outputBox) {
+                    outputBox.textContent = '错误: ' + e.message;
+                    outputBox.classList.add('error');
+                }
+            }
+        }
+
+        // 综合转换处理
+        function processUniversalConvert(inputText) {
+            // 解析结果
+            let bytes = null;
+            let detectedFormat = '';
+            let formatDetail = '';
+
+            // 辅助函数：将字节数组转换为 CryptoJS WordArray
+            function byteArrayToWordArray(byteArray) {
+                const words = [];
+                for (let i = 0; i < byteArray.length; i += 4) {
+                    words.push(
+                        (byteArray[i] << 24) |
+                        ((byteArray[i + 1] || 0) << 16) |
+                        ((byteArray[i + 2] || 0) << 8) |
+                        (byteArray[i + 3] || 0)
+                    );
+                }
+                const wordArray = CryptoJS.lib.WordArray.create(words);
+                wordArray.sigBytes = byteArray.length;
+                return wordArray;
+            }
+
+            // 1. 尝试检测 C-Array 格式: unsigned char xxx[] = { 0x55, 0x31, 0xD2 };
+            const cArrayMatch = inputText.match(/unsigned\s+char\s+\w*\s*\[\s*\]\s*=\s*\{([\s\S]*?)\}/i);
+            if (cArrayMatch) {
+                try {
+                    const hexValues = cArrayMatch[1].match(/0x[0-9a-fA-F]{2}/g);
+                    if (hexValues) {
+                        const byteArray = hexValues.map(h => parseInt(h, 16));
+                        bytes = byteArrayToWordArray(byteArray);
+                        detectedFormat = 'C-Array';
+                        formatDetail = `unsigned char[${byteArray.length}]`;
+                    }
+                } catch (e) {}
+            }
+
+            // 2. 尝试检测 Python 列表格式: xxx = [ 0x55, 0x31, 0xD2 ]
+            if (!bytes) {
+                const pythonMatch = inputText.match(/\w*\s*=\s*\[([\s\S]*?)\]/);
+                if (pythonMatch) {
+                    try {
+                        const hexValues = pythonMatch[1].match(/0x[0-9a-fA-F]{2}/g);
+                        if (hexValues) {
+                            const byteArray = hexValues.map(h => parseInt(h, 16));
+                            bytes = byteArrayToWordArray(byteArray);
+                            detectedFormat = 'Python List';
+                            formatDetail = `list[${byteArray.length}]`;
+                        }
+                    } catch (e) {}
+                }
+            }
+
+            // 3. 尝试检测 Inline 格式: \x55\x31\xD2
+            if (!bytes) {
+                const inlineMatch = inputText.match(/^(?:\\x[0-9a-fA-F]{2})+$/);
+                if (inlineMatch) {
+                    try {
+                        const hexValues = inputText.match(/\\x([0-9a-fA-F]{2})/g);
+                        if (hexValues) {
+                            const byteArray = hexValues.map(h => parseInt(h.slice(2), 16));
+                            bytes = byteArrayToWordArray(byteArray);
+                            detectedFormat = 'Inline';
+                            formatDetail = `${byteArray.length} bytes`;
+                        }
+                    } catch (e) {}
+                }
+            }
+
+            // 4. 尝试检测 Hex 格式
+            if (!bytes) {
+                const hexOnly = inputText.replace(/[\s\n\r]/g, '');
+                if (/^[0-9a-fA-F]+$/.test(hexOnly) && hexOnly.length % 2 === 0 && hexOnly.length >= 2) {
+                    try {
+                        bytes = CryptoJS.enc.Hex.parse(hexOnly);
+                        detectedFormat = 'Hex';
+                        formatDetail = `${hexOnly.length / 2} bytes`;
+                    } catch (e) {}
+                }
+            }
+
+            // 5. 尝试检测 Base64 格式
+            if (!bytes) {
+                const base64Only = inputText.replace(/[\s\n\r]/g, '');
+                if (/^[A-Za-z0-9+/]+=*$/.test(base64Only) && base64Only.length >= 4) {
+                    try {
+                        bytes = CryptoJS.enc.Base64.parse(base64Only);
+                        detectedFormat = 'Base64';
+                        formatDetail = `${bytes.sigBytes} bytes`;
+                    } catch (e) {}
+                }
+            }
+
+            // 6. 尝试作为 UTF-8 字符串
+            if (!bytes) {
+                try {
+                    bytes = CryptoJS.enc.Utf8.parse(inputText);
+                    detectedFormat = 'UTF-8 字符串';
+                    formatDetail = `${bytes.sigBytes} bytes`;
+                } catch (e) {}
+            }
+
+            if (!bytes || bytes.sigBytes === 0) {
+                throw new Error('无法识别输入格式');
+            }
+
+            // 生成所有输出格式
+            const byteArray = [];
+            const words = bytes.words;
+            for (let i = 0; i < bytes.sigBytes; i++) {
+                const byte = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+                byteArray.push(byte);
+            }
+
+            let result = `════════════════════════════════════════\n`;
+            result += `检测到输入格式: ${detectedFormat}\n`;
+            result += `数据长度: ${bytes.sigBytes} 字节 (${bytes.sigBytes * 8} 位)\n`;
+            result += `════════════════════════════════════════\n\n`;
+
+            // UTF-8 字符串
+            if (detectedFormat !== 'UTF-8 字符串') {
+                try {
+                    const utf8Str = bytes.toString(CryptoJS.enc.Utf8);
+                    if (utf8Str && !utf8Str.includes('\ufffd')) {
+                        result += `UTF-8 字符串:\n${utf8Str}\n\n`;
+                    } else {
+                        result += `UTF-8 字符串:\n(包含不可打印字符)\n\n`;
+                    }
+                } catch (e) {
+                    result += `UTF-8 字符串:\n(无法转换)\n\n`;
+                }
+            }
+
+            // Hex
+            if (detectedFormat !== 'Hex') {
+                const hexStr = bytes.toString(CryptoJS.enc.Hex);
+                result += `Hex (十六进制):\n${hexStr}\n\n`;
+            }
+
+            // Base64
+            if (detectedFormat !== 'Base64') {
+                const base64Str = bytes.toString(CryptoJS.enc.Base64);
+                result += `Base64:\n${base64Str}\n\n`;
+            }
+
+            // Inline
+            if (detectedFormat !== 'Inline') {
+                const inlineStr = byteArray.map(b => `\\x${b.toString(16).padStart(2, '0')}`).join('');
+                result += `Inline:\n${inlineStr}\n\n`;
+            }
+
+            // C-Array
+            if (detectedFormat !== 'C-Array') {
+                const cArrayItems = byteArray.map(b => `0x${b.toString(16).padStart(2, '0').toUpperCase()}`);
+                const cArrayStr = `unsigned char data[] = {\n  ${cArrayItems.join(', ')}\n};`;
+                result += `C-Array:\n${cArrayStr}\n\n`;
+            }
+
+            // Python
+            if (detectedFormat !== 'Python List') {
+                const pythonItems = byteArray.map(b => `0x${b.toString(16).padStart(2, '0').toUpperCase()}`);
+                const pythonStr = `data = [\n  ${pythonItems.join(', ')}\n]`;
+                result += `Python:\n${pythonStr}\n\n`;
+            }
+
+            // 字节摘要
+            result += `════════════════════════════════════════\n`;
+            result += `字节摘要:\n`;
+            result += `前16字节: ${byteArray.slice(0, 16).map(b => b.toString(16).padStart(2, '0')).join(' ')}\n`;
+            if (byteArray.length > 16) {
+                result += `后16字节: ${byteArray.slice(-16).map(b => b.toString(16).padStart(2, '0')).join(' ')}\n`;
+            }
+
+            return result;
+        }
+
+        // 对称加密处理
+        function processSymmetric(text, algo) {
+            const keyInput = document.getElementById('keyInput')?.value || '';
+            const keyFormat = document.getElementById('keyFormat')?.value || 'Utf8';
+            const keySize = parseInt(document.getElementById('keySize')?.value || 256);
+
+            // 解析密钥
+            let key;
+            if (keyInput) {
+                key = keyFormats[keyFormat].enc.parse(keyInput);
+            } else {
+                key = CryptoJS.lib.WordArray.random(keySize / 8);
+            }
+
+            let result;
+
+            // 辅助函数：尝试转换为UTF-8字符串
+            function tryUtf8(wordArray) {
+                try {
+                    const utf8Str = wordArray.toString(CryptoJS.enc.Utf8);
+                    // 检查是否是有效的UTF-8（没有乱码）
+                    if (utf8Str && !utf8Str.includes('\ufffd')) {
+                        return utf8Str;
+                    }
+                    return null;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // 辅助函数：显示密钥/IV的所有格式
+            function formatDisplay(name, wordArray) {
+                let output = `${name}:\n`;
+                const utf8Str = tryUtf8(wordArray);
+                if (utf8Str) {
+                    output += `  UTF-8: ${utf8Str}\n`;
+                }
+                output += `  Hex: ${wordArray.toString(CryptoJS.enc.Hex)}\n`;
+                output += `  Base64: ${wordArray.toString(CryptoJS.enc.Base64)}\n`;
+                output += `  ${t('infoBits')}: ${wordArray.sigBytes * 8} ${t('infoBits')}\n`;
+                return output;
+            }
+
+            if (algo.supportsMode) {
+                const cipherMode = document.getElementById('cipherMode')?.value || 'CBC';
+                const paddingMode = document.getElementById('paddingMode')?.value || 'Pkcs7';
+                const ivInput = document.getElementById('ivInput')?.value || '';
+                const ivFormat = document.getElementById('ivFormat')?.value || 'Utf8';
+
+                // 获取模式配置
+                const modeConfig = cipherModes[cipherMode];
+                const padding = CryptoJS.pad[paddingMode];
+
+                // 解析 IV
+                let iv = null;
+                if (modeConfig.needsIv) {
+                    if (ivInput && ivInput.trim()) {
+                        // 有输入就使用自定义IV
+                        iv = keyFormats[ivFormat].enc.parse(ivInput);
+                    } else {
+                        // 否则随机生成
+                        iv = CryptoJS.lib.WordArray.random(16);
+                    }
+                }
+
+                if (currentMode === 'encrypt') {
+                    const cipherAlgo = CryptoJS[currentAlgo];
+                    const encrypted = cipherAlgo.encrypt(text, key, {
+                        iv: iv,
+                        mode: CryptoJS.mode[cipherMode],
+                        padding: padding
+                    });
+
+                    const ciphertext = encrypted.ciphertext;
+
+                    result = `${t('encResult')}:\n`;
+                    result += `  Base64: ${encrypted.toString()}\n`;
+                    result += `  Hex: ${ciphertext.toString(CryptoJS.enc.Hex)}\n\n`;
+
+                    result += formatDisplay(t('encKey'), key) + '\n';
+
+                    if (modeConfig.needsIv) {
+                        result += formatDisplay(t('encIV'), iv) + '\n';
+                    }
+
+                    result += `${t('encMode')}: ${cipherMode}\n`;
+                    result += `${t('encPadding')}: ${paddingMode}`;
+
+                    if (!keyInput) {
+                        result += `\n\n${t('encKeyAuto')}`;
+                    }
+                } else {
+                    const inputEncoding = document.getElementById('inputEncoding')?.value || 'Base64';
+                    const outputEnc = document.getElementById('outputEncoding')?.value || 'Utf8';
+
+                    let ciphertext;
+                    if (inputEncoding === 'Base64') {
+                        ciphertext = CryptoJS.enc.Base64.parse(text);
+                    } else {
+                        ciphertext = CryptoJS.enc.Hex.parse(text);
+                    }
+
+                    const cipherParams = CryptoJS.lib.CipherParams.create({
+                        ciphertext: ciphertext
+                    });
+
+                    const decrypted = CryptoJS[currentAlgo].decrypt(cipherParams, key, {
+                        iv: iv,
+                        mode: CryptoJS.mode[cipherMode],
+                        padding: padding
+                    });
+
+                    result = outputEnc === 'Utf8' ? decrypted.toString(CryptoJS.enc.Utf8) : decrypted.toString(CryptoJS.enc.Hex);
+                }
+            } else {
+                // 流密码（Rabbit, RC4 等）
+                if (currentMode === 'encrypt') {
+                    const encrypted = CryptoJS[currentAlgo].encrypt(text, key);
+                    const ciphertext = encrypted.ciphertext;
+
+                    result = `加密结果:\n`;
+                    result += `  Base64: ${encrypted.toString()}\n`;
+                    result += `  Hex: ${ciphertext.toString(CryptoJS.enc.Hex)}\n\n`;
+
+                    result += formatDisplay('密钥', key);
+
+                    if (!keyInput) {
+                        result += `\n\n⚠️ 已自动生成密钥，请妥善保存！`;
+                    }
+                } else {
+                    const inputEncoding = document.getElementById('inputEncoding')?.value || 'Base64';
+                    let ciphertext;
+                    if (inputEncoding === 'Base64') {
+                        ciphertext = CryptoJS.enc.Base64.parse(text);
+                    } else {
+                        ciphertext = CryptoJS.enc.Hex.parse(text);
+                    }
+
+                    const cipherParams = CryptoJS.lib.CipherParams.create({
+                        ciphertext: ciphertext
+                    });
+
+                    const decrypted = CryptoJS[currentAlgo].decrypt(cipherParams, key);
+                    const outputEnc = document.getElementById('outputEncoding')?.value || 'Utf8';
+
+                    result = outputEnc === 'Utf8' ? decrypted.toString(CryptoJS.enc.Utf8) : decrypted.toString(CryptoJS.enc.Hex);
+                }
+            }
+
+            return result;
+        }
+
+        // 哈希处理
+        function processHash(text) {
+            let result;
+
+            if (currentAlgo === 'SHA3') {
+                const outputLength = parseInt(document.getElementById('outputLength').value);
+                result = CryptoJS.SHA3(text, { outputLength: outputLength }).toString();
+            } else {
+                result = CryptoJS[currentAlgo](text).toString();
+            }
+
+            return `哈希值:\n${result}\n\n长度: ${result.length * 4} 位 (${result.length} 字符)`;
+        }
+
+        // HMAC处理
+        function processHMAC(text) {
+            const keyInput = document.getElementById('keyInput').value;
+            const keyFormat = document.getElementById('keyFormat').value;
+            const hashAlgo = document.getElementById('hashAlgo').value;
+
+            if (!keyInput) {
+                throw new Error('请输入密钥');
+            }
+
+            const key = keyFormats[keyFormat].enc.parse(keyInput);
+
+            const hmacMap = {
+                'MD5': CryptoJS.HmacMD5,
+                'SHA1': CryptoJS.HmacSHA1,
+                'SHA224': CryptoJS.HmacSHA224,
+                'SHA256': CryptoJS.HmacSHA256,
+                'SHA384': CryptoJS.HmacSHA384,
+                'SHA512': CryptoJS.HmacSHA512
+            };
+
+            const hmacResult = hmacMap[hashAlgo](text, key).toString();
+
+            return `HMAC-${hashAlgo}:\n${hmacResult}\n\n密钥格式: ${keyFormats[keyFormat].name}\n哈希算法: ${hashAlgo}`;
+        }
+
+        // PBKDF2处理
+        function processPBKDF2() {
+            const password = document.getElementById('passwordInput').value;
+            const saltInput = document.getElementById('saltInput').value || '';
+            const saltFormat = document.getElementById('saltFormat').value;
+            const iterations = parseInt(document.getElementById('iterationsInput').value) || 10000;
+            const keySize = parseInt(document.getElementById('derivedKeySize').value) / 32;
+            const hashAlgo = document.getElementById('pbkdfHashAlgo').value;
+
+            if (!password) {
+                throw new Error('请输入密码');
+            }
+
+            const salt = saltInput ? keyFormats[saltFormat].enc.parse(saltInput) : '';
+
+            const key = CryptoJS.PBKDF2(password, salt, {
+                keySize: keySize,
+                iterations: iterations,
+                hasher: CryptoJS.algo[hashAlgo]
+            });
+
+            let result = `派生密钥:\n${key.toString()}\n\n`;
+            result += `密钥位数: ${keySize * 32} 位\n`;
+            result += `迭代次数: ${iterations}\n`;
+            result += `哈希算法: ${hashAlgo}`;
+            if (saltInput) {
+                result += `\n盐值: ${saltInput}`;
+            }
+
+            return result;
+        }
+
+        // EvpKDF处理
+        function processEvpKDF() {
+            const password = document.getElementById('passwordInput').value;
+            const saltInput = document.getElementById('saltInput').value || '';
+            const saltFormat = document.getElementById('saltFormat').value;
+            const keySize = parseInt(document.getElementById('derivedKeySize').value) / 32;
+
+            if (!password) {
+                throw new Error('请输入密码');
+            }
+
+            const salt = saltInput ? keyFormats[saltFormat].enc.parse(saltInput) : '';
+
+            const key = CryptoJS.EvpKDF(password, salt, {
+                keySize: keySize
+            });
+
+            let result = `派生密钥:\n${key.toString()}\n\n`;
+            result += `密钥位数: ${keySize * 32} 位`;
+            if (saltInput) {
+                result += `\n盐值: ${saltInput}`;
+            }
+
+            return result;
+        }
+
+        // 复制结果
+        function copyOutput() {
+            const outputBox = document.getElementById('outputBox');
+            const text = outputBox.textContent;
+
+            if (!text) {
+                showToast('没有可复制的内容');
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('已复制到剪贴板');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('已复制到剪贴板');
+            });
+        }
+
+        // 显示提示
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+            if (newTheme === 'dark') {
+                html.removeAttribute('data-theme');
+            } else {
+                html.setAttribute('data-theme', 'light');
+            }
+
+            localStorage.setItem('theme', newTheme === 'light' ? 'light' : 'dark');
+            document.getElementById('theme-icon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            showToast(newTheme === 'light' ? t('toastThemeLight') : t('toastThemeDark'));
+        }
+
+        // 语言切换
+        function toggleLanguage() {
+            const html = document.documentElement;
+            const currentLang = html.getAttribute('data-lang') || 'zh';
+            const newLang = currentLang === 'zh' ? 'en' : 'zh';
+
+            html.setAttribute('data-lang', newLang);
+            localStorage.setItem('language', newLang);
+            window.__initialLang = newLang;
+            document.getElementById('lang-icon').textContent = newLang === 'zh' ? 'EN' : '中';
+
+            updateStaticText();
+            renderWorkspace(currentAlgo);
+            showToast(newLang === 'en' ? t('toastLangEn') : t('toastLangZh'));
+        }
+
+        // 更新静态文本
+        function updateStaticText() {
+            // 更新页面标题
+            document.getElementById('pageTitle').textContent = t('title');
+            document.getElementById('pageSubtitle').textContent = t('subtitle');
+
+            // 更新分类标题
+            document.getElementById('catSymmetric').textContent = t('catSymmetric');
+            document.getElementById('catHash').textContent = t('catHash');
+            document.getElementById('catHMAC').textContent = t('catHMAC');
+            document.getElementById('catEncoding').textContent = t('catEncoding');
+            document.getElementById('catKDF').textContent = t('catKDF');
+
+            // 更新按钮文本
+            document.getElementById('btnUniversalConvert').textContent = t('universalTitle');
+            document.getElementById('btnHexEncode').textContent = t('formatHexShort') + ' ' + t('catEncoding');
+            document.getElementById('btnUtf8Encode').textContent = 'UTF-8 ' + t('catEncoding');
+
+            // 更新footer
+            document.getElementById('footerText1').textContent = t('footer1');
+            document.getElementById('footerText2').innerHTML = t('footer2') + ' <a href="https://github.com/brix/crypto-js" target="_blank">Crypto.js</a>';
+        }
+    </script>
+</body>
+</html>
