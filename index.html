@@ -218,12 +218,40 @@
             margin-bottom: 20px;
         }
 
-        .category h3 {
+        .category-header {
             color: var(--accent-color);
             font-size: 1rem;
             margin-bottom: 10px;
             padding-bottom: 5px;
             border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+
+        .category-header:hover {
+            color: var(--text-primary);
+        }
+
+        .category-arrow {
+            transition: transform 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .category.collapsed .category-arrow {
+            transform: rotate(-90deg);
+        }
+
+        .category-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            max-height: 1000px;
+        }
+
+        .category.collapsed .category-content {
+            max-height: 0;
         }
 
         .algorithm-btn {
@@ -717,44 +745,69 @@
 
         <div class="main-content">
             <aside class="sidebar">
-                <div class="category">
-                    <h3 id="catSymmetric">对称加密</h3>
-                    <button class="algorithm-btn active" data-algo="AES">AES</button>
-                    <button class="algorithm-btn" data-algo="DES">DES</button>
-                    <button class="algorithm-btn" data-algo="TripleDES">TripleDES</button>
-                    <button class="algorithm-btn" data-algo="Blowfish">Blowfish</button>
-                    <button class="algorithm-btn" data-algo="Rabbit">Rabbit</button>
-                    <button class="algorithm-btn" data-algo="RC4">RC4</button>
-                    <button class="algorithm-btn" data-algo="RC4Drop">RC4Drop</button>
+                <div class="category collapsed">
+                    <div class="category-header" onclick="toggleCategory(this)">
+                        <span id="catSymmetric">对称加密</span>
+                        <span class="category-arrow">▼</span>
+                    </div>
+                    <div class="category-content">
+                        <button class="algorithm-btn active" data-algo="AES">AES</button>
+                        <button class="algorithm-btn" data-algo="DES">DES</button>
+                        <button class="algorithm-btn" data-algo="TripleDES">TripleDES</button>
+                        <button class="algorithm-btn" data-algo="Blowfish">Blowfish</button>
+                        <button class="algorithm-btn" data-algo="Rabbit">Rabbit</button>
+                        <button class="algorithm-btn" data-algo="RC4">RC4</button>
+                        <button class="algorithm-btn" data-algo="RC4Drop">RC4Drop</button>
+                    </div>
                 </div>
-                <div class="category">
-                    <h3 id="catHash">哈希算法</h3>
-                    <button class="algorithm-btn hash-all-btn" id="hashAllBtn">All</button>
-                    <button class="algorithm-btn" data-algo="MD5">MD5</button>
-                    <button class="algorithm-btn" data-algo="SHA1">SHA-1</button>
-                    <button class="algorithm-btn" data-algo="SHA224">SHA-224</button>
-                    <button class="algorithm-btn" data-algo="SHA256">SHA-256</button>
-                    <button class="algorithm-btn" data-algo="SHA384">SHA-384</button>
-                    <button class="algorithm-btn" data-algo="SHA512">SHA-512</button>
-                    <button class="algorithm-btn" data-algo="SHA3">SHA-3</button>
-                    <button class="algorithm-btn" data-algo="RIPEMD160">RIPEMD-160</button>
+                <div class="category collapsed">
+                    <div class="category-header" onclick="toggleCategory(this)">
+                        <span id="catHash">哈希算法</span>
+                        <span class="category-arrow">▼</span>
+                    </div>
+                    <div class="category-content">
+                        <button class="algorithm-btn hash-all-btn" id="hashAllBtn">All</button>
+                        <button class="algorithm-btn" data-algo="MD5">MD5</button>
+                        <button class="algorithm-btn" data-algo="SHA1">SHA-1</button>
+                        <button class="algorithm-btn" data-algo="SHA224">SHA-224</button>
+                        <button class="algorithm-btn" data-algo="SHA256">SHA-256</button>
+                        <button class="algorithm-btn" data-algo="SHA384">SHA-384</button>
+                        <button class="algorithm-btn" data-algo="SHA512">SHA-512</button>
+                        <button class="algorithm-btn" data-algo="SHA3">SHA-3</button>
+                        <button class="algorithm-btn" data-algo="RIPEMD160">RIPEMD-160</button>
+                    </div>
                 </div>
-                <div class="category">
-                    <h3 id="catHMAC">HMAC</h3>
-                    <button class="algorithm-btn" data-algo="HMAC">HMAC</button>
+                <div class="category collapsed">
+                    <div class="category-header" onclick="toggleCategory(this)">
+                        <span id="catHMAC">HMAC</span>
+                        <span class="category-arrow">▼</span>
+                    </div>
+                    <div class="category-content">
+                        <button class="algorithm-btn" data-algo="HMAC">HMAC</button>
+                    </div>
                 </div>
-                <div class="category">
-                    <h3 id="catEncoding">编码工具</h3>
-                    <button class="algorithm-btn" data-algo="UniversalConvert" id="btnUniversalConvert">综合转换</button>
-                    <button class="algorithm-btn" data-algo="Base64">Base64</button>
-                    <button class="algorithm-btn" data-algo="Hex" id="btnHexEncode">Hex 编码</button>
-                    <button class="algorithm-btn" data-algo="Latin1">Latin1</button>
-                    <button class="algorithm-btn" data-algo="Utf8" id="btnUtf8Encode">UTF-8 编码</button>
+                <div class="category collapsed">
+                    <div class="category-header" onclick="toggleCategory(this)">
+                        <span id="catEncoding">编码工具</span>
+                        <span class="category-arrow">▼</span>
+                    </div>
+                    <div class="category-content">
+                        <button class="algorithm-btn" data-algo="UniversalConvert" id="btnUniversalConvert">综合转换</button>
+                        <button class="algorithm-btn" data-algo="Base64">Base64</button>
+                        <button class="algorithm-btn" data-algo="Hex" id="btnHexEncode">Hex 编码</button>
+                        <button class="algorithm-btn" data-algo="Latin1">Latin1</button>
+                        <button class="algorithm-btn" data-algo="Utf8" id="btnUtf8Encode">UTF-8 编码</button>
+                    </div>
                 </div>
-                <div class="category">
-                    <h3 id="catKDF">密钥派生</h3>
-                    <button class="algorithm-btn" data-algo="PBKDF2">PBKDF2</button>
-                    <button class="algorithm-btn" data-algo="EvpKDF">EvpKDF</button>
+                <div class="category collapsed">
+                    <div class="category-header" onclick="toggleCategory(this)">
+                        <span id="catKDF">密钥派生</span>
+                        <span class="category-arrow">▼</span>
+                    </div>
+                    <div class="category-content">
+                        <button class="algorithm-btn" data-algo="PBKDF2">PBKDF2</button>
+                        <button class="algorithm-btn" data-algo="EvpKDF">EvpKDF</button>
+                    </div>
                 </div>
             </aside>
 
@@ -1965,6 +2018,12 @@
             if (algo.supportsFile) {
                 setupFileDropZone();
             }
+        }
+
+        // 切换分类折叠
+        function toggleCategory(header) {
+            const category = header.parentElement;
+            category.classList.toggle('collapsed');
         }
 
         // 切换折叠
