@@ -534,6 +534,104 @@
             color: #fff;
         }
 
+        /* 输入类型切换 */
+        .input-type-toggle {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 15px;
+        }
+
+        .input-type-btn {
+            flex: 1;
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+        }
+
+        .input-type-btn.active {
+            background: linear-gradient(135deg, var(--accent-color), #0099cc);
+            color: #fff;
+        }
+
+        /* 文件拖拽区域 */
+        .file-drop-zone {
+            border: 2px dashed var(--text-muted);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-secondary);
+            margin-bottom: 15px;
+        }
+
+        .file-drop-zone:hover,
+        .file-drop-zone.dragover {
+            border-color: var(--accent-color);
+            background: var(--bg-tertiary);
+        }
+
+        .file-drop-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .file-icon {
+            color: var(--text-muted);
+        }
+
+        .file-drop-zone:hover .file-icon,
+        .file-drop-zone.dragover .file-icon {
+            color: var(--accent-color);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 10px 15px;
+            margin-top: 15px;
+        }
+
+        .file-info span {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        #fileName {
+            font-weight: 500;
+            color: var(--accent-color);
+        }
+
+        #fileSize {
+            color: var(--text-muted);
+        }
+
+        .btn-clear-file {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .btn-clear-file:hover {
+            color: #ff6b6b;
+        }
+
         .advanced-section {
             background: var(--bg-secondary);
             border-radius: 8px;
@@ -631,6 +729,7 @@
                 </div>
                 <div class="category">
                     <h3 id="catHash">哈希算法</h3>
+                    <button class="algorithm-btn hash-all-btn" id="hashAllBtn">All</button>
                     <button class="algorithm-btn" data-algo="MD5">MD5</button>
                     <button class="algorithm-btn" data-algo="SHA1">SHA-1</button>
                     <button class="algorithm-btn" data-algo="SHA224">SHA-224</button>
@@ -705,6 +804,7 @@
                 btnConvert: '转换',
                 btnGenerateKey: '生成随机密钥',
                 btnClear: '清空',
+                btnAllHashes: 'All',
                 btnCopy: '复制结果',
 
                 // 表单标签
@@ -764,6 +864,7 @@
                 // 信息提示
                 infoFormat: '格式',
                 infoBits: '位数',
+                infoChars: '字符',
                 infoActualLength: '实际长度',
                 infoMismatch: '⚠️ 与设置不符',
                 infoParseError: '解析错误',
@@ -830,6 +931,17 @@
                 // 哈希
                 hashValue: '哈希值',
                 hashLength: '长度',
+                hashInputType: '输入类型',
+                hashInputText: '文本',
+                hashInputFile: '文件',
+                hashSelectFile: '选择文件',
+                hashFileDrop: '拖拽文件到此处或点击选择',
+                hashCalculating: '正在计算哈希值...',
+                hashAlgoNotSupported: '该算法不支持文件哈希计算',
+                hashAllDescription: '同时计算 MD5、SHA-1、SHA-224、SHA-256、SHA-384、SHA-512 及 SHA-3 全系列（224/256/384/512）哈希值。',
+                hashFileResult: '文件哈希值',
+                hashFileName: '文件名',
+                hashFileSize: '文件大小',
 
                 // 警告
                 warnDES: '⚠️ DES 算法安全性较低（56位密钥易被破解），建议使用 AES 替代。',
@@ -916,6 +1028,7 @@
                 btnConvert: 'Convert',
                 btnGenerateKey: 'Generate Random Key',
                 btnClear: 'Clear',
+                btnAllHashes: 'All',
                 btnCopy: 'Copy Result',
 
                 // Form labels
@@ -974,6 +1087,7 @@
                 // Info
                 infoFormat: 'Format',
                 infoBits: 'Bits',
+                infoChars: 'Chars',
                 infoActualLength: 'Actual Length',
                 infoMismatch: '⚠️ Mismatch',
                 infoParseError: 'Parse Error',
@@ -1040,6 +1154,17 @@
                 // Hash
                 hashValue: 'Hash Value',
                 hashLength: 'Length',
+                hashInputType: 'Input Type',
+                hashInputText: 'Text',
+                hashInputFile: 'File',
+                hashSelectFile: 'Select File',
+                hashFileDrop: 'Drag file here or click to select',
+                hashCalculating: 'Calculating hash value...',
+                hashAlgoNotSupported: 'This algorithm does not support file hash calculation',
+                hashAllDescription: 'Calculate MD5, SHA-1, SHA-224, SHA-256, SHA-384, SHA-512 and SHA-3 series (224/256/384/512) hashes at once.',
+                hashFileResult: 'File Hash Value',
+                hashFileName: 'File Name',
+                hashFileSize: 'File Size',
 
                 // Warnings
                 warnDES: '⚠️ DES is insecure (56-bit key can be cracked), recommend using AES instead.',
@@ -1238,42 +1363,48 @@
                 badge: '哈希算法',
                 description: '消息摘要算法第五版，产生128位哈希值。已不推荐用于安全场景。',
                 hasDecrypt: false,
-                needsKey: false
+                needsKey: false,
+                supportsFile: true
             },
             SHA1: {
                 name: 'SHA-1',
                 badge: '哈希算法',
                 description: '安全哈希算法第一版，产生160位哈希值。已逐渐被淘汰。',
                 hasDecrypt: false,
-                needsKey: false
+                needsKey: false,
+                supportsFile: true
             },
             SHA224: {
                 name: 'SHA-224',
                 badge: '哈希算法',
                 description: 'SHA-2 系列算法，产生224位哈希值。',
                 hasDecrypt: false,
-                needsKey: false
+                needsKey: false,
+                supportsFile: true
             },
             SHA256: {
                 name: 'SHA-256',
                 badge: '哈希算法',
                 description: 'SHA-2 系列算法，产生256位哈希值，广泛使用。',
                 hasDecrypt: false,
-                needsKey: false
+                needsKey: false,
+                supportsFile: true
             },
             SHA384: {
                 name: 'SHA-384',
                 badge: '哈希算法',
                 description: 'SHA-2 系列算法，产生384位哈希值。',
                 hasDecrypt: false,
-                needsKey: false
+                needsKey: false,
+                supportsFile: true
             },
             SHA512: {
                 name: 'SHA-512',
                 badge: '哈希算法',
                 description: 'SHA-2 系列算法，产生512位哈希值，安全性高。',
                 hasDecrypt: false,
-                needsKey: false
+                needsKey: false,
+                supportsFile: true
             },
             SHA3: {
                 name: 'SHA-3',
@@ -1281,14 +1412,16 @@
                 description: '新一代安全哈希算法，基于 Keccak 结构。',
                 hasDecrypt: false,
                 needsKey: false,
-                needsOutputLength: true
+                needsOutputLength: true,
+                supportsFile: false  // SHA3 使用 CryptoJS，不支持 Web Crypto API
             },
             RIPEMD160: {
                 name: 'RIPEMD-160',
                 badge: '哈希算法',
                 description: 'RIPEMD 系列哈希算法，产生160位哈希值。',
                 hasDecrypt: false,
-                needsKey: false
+                needsKey: false,
+                supportsFile: false  // RIPEMD160 使用 CryptoJS，不支持 Web Crypto API
             },
             HMAC: {
                 name: 'HMAC',
@@ -1411,6 +1544,75 @@
                     setTimeout(() => restoreFormData(), 0);
                 });
             });
+
+            // All 按钮事件
+            const hashAllBtn = document.getElementById('hashAllBtn');
+            if (hashAllBtn) {
+                hashAllBtn.addEventListener('click', () => {
+                    document.querySelectorAll('.algorithm-btn').forEach(b => b.classList.remove('active'));
+                    hashAllBtn.classList.add('active');
+                    renderHashAllWorkspace();
+                });
+            }
+        }
+
+        // 渲染哈希 All 工作区
+        function renderHashAllWorkspace() {
+            const workspace = document.getElementById('workspace');
+
+            let html = `
+                <h2>All <span class="badge">${t('catHash')}</span></h2>
+                <p class="description">${t('hashAllDescription')}</p>
+
+                <div class="form-group">
+                    <label>${t('hashInputType')}</label>
+                    <div class="input-type-toggle" id="inputTypeToggle">
+                        <button type="button" class="input-type-btn active" onclick="switchInputType('text')">${t('hashInputText')}</button>
+                        <button type="button" class="input-type-btn" onclick="switchInputType('file')">${t('hashInputFile')}</button>
+                    </div>
+                </div>
+                <div id="textInputArea">
+                    <div class="form-group"><label>${t('lblInputText')}</label>
+                    <textarea id="inputText" placeholder="${t('placeholderInput')}"></textarea></div>
+                </div>
+                <div id="fileInputArea" style="display: none;">
+                    <div class="file-drop-zone" id="fileDropZone">
+                        <div class="file-drop-content">
+                            <svg class="file-icon" viewBox="0 0 24 24" width="48" height="48">
+                                <path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                            </svg>
+                            <p>${t('hashFileDrop')}</p>
+                            <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)">
+                        </div>
+                        <div class="file-info" id="fileInfo" style="display: none;">
+                            <span id="fileName"></span>
+                            <span id="fileSize"></span>
+                            <button class="btn-clear-file" onclick="clearFile()">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="processAllHashes()">${t('btnCalculate')}</button>
+                    <button class="btn btn-secondary" onclick="clearAll()">${t('btnClear')}</button>
+                </div>
+
+                <div class="output-section">
+                    <h4>${t('outputResult')}</h4>
+                    <div class="output-box" id="outputBox"></div>
+                    <button class="copy-btn" onclick="copyOutput()">${t('btnCopy')}</button>
+                </div>
+            `;
+
+            workspace.innerHTML = html;
+
+            // 重置状态
+            currentInputType = 'text';
+            selectedFile = null;
+            currentAlgo = 'All';
+
+            // 初始化文件拖拽区域
+            setupFileDropZone();
         }
 
         // 渲染工作区
@@ -1463,8 +1665,42 @@
 
             const inputLabel = algo.isUniversal ? t('universalInput') :
                 (algo.hasDecrypt ? (currentMode === 'encrypt' ? t('lblTextToEncrypt') : t('lblTextToDecrypt')) : t('lblInputText'));
-            html += `<div class="form-group"><label>${inputLabel}</label>`;
-            html += `<textarea id="inputText" placeholder="${algo.isUniversal ? t('universalPlaceholder') : t('placeholderInput')}"></textarea></div>`;
+
+            // 哈希算法支持文件输入
+            if (algo.supportsFile) {
+                html += `
+                    <div class="form-group">
+                        <label>${t('hashInputType')}</label>
+                        <div class="input-type-toggle" id="inputTypeToggle">
+                            <button type="button" class="input-type-btn active" onclick="switchInputType('text')">${t('hashInputText')}</button>
+                            <button type="button" class="input-type-btn" onclick="switchInputType('file')">${t('hashInputFile')}</button>
+                        </div>
+                    </div>
+                    <div id="textInputArea">
+                        <div class="form-group"><label>${inputLabel}</label>
+                        <textarea id="inputText" placeholder="${algo.isUniversal ? t('universalPlaceholder') : t('placeholderInput')}"></textarea></div>
+                    </div>
+                    <div id="fileInputArea" style="display: none;">
+                        <div class="file-drop-zone" id="fileDropZone">
+                            <div class="file-drop-content">
+                                <svg class="file-icon" viewBox="0 0 24 24" width="48" height="48">
+                                    <path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                                </svg>
+                                <p>${t('hashFileDrop')}</p>
+                                <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)">
+                            </div>
+                            <div class="file-info" id="fileInfo" style="display: none;">
+                                <span id="fileName"></span>
+                                <span id="fileSize"></span>
+                                <button class="btn-clear-file" onclick="clearFile()">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `<div class="form-group"><label>${inputLabel}</label>`;
+                html += `<textarea id="inputText" placeholder="${algo.isUniversal ? t('universalPlaceholder') : t('placeholderInput')}"></textarea></div>`;
+            }
 
             // 对称加密高级设置
             if (algo.needsKey && algo.supportsMode) {
@@ -1714,12 +1950,21 @@
 
             workspace.innerHTML = html;
 
+            // 重置文件输入状态
+            currentInputType = 'text';
+            selectedFile = null;
+
             // 初始化
             if (algo.supportsMode) {
                 updateIvRequirement();
             }
             updateKeyInfo();
             updateIvInfo();
+
+            // 初始化文件拖拽区域
+            if (algo.supportsFile) {
+                setupFileDropZone();
+            }
         }
 
         // 切换折叠
@@ -1935,13 +2180,41 @@
         }
 
         // 处理加密/解密/哈希
-        function process() {
+        async function process() {
             try {
                 const algo = algorithms[currentAlgo];
                 const inputTextEl = document.getElementById('inputText');
                 const outputBox = document.getElementById('outputBox');
 
-                if (!inputTextEl || !outputBox) {
+                if (!outputBox) {
+                    alert('找不到输出元素');
+                    return;
+                }
+
+                // 检查是否是文件输入模式
+                if (algo.supportsFile && currentInputType === 'file') {
+                    if (!selectedFile) {
+                        outputBox.textContent = t('hashSelectFile');
+                        outputBox.classList.add('error');
+                        return;
+                    }
+
+                    outputBox.classList.remove('error');
+                    outputBox.textContent = t('hashCalculating');
+
+                    try {
+                        const hashHex = await calculateFileHash(selectedFile, currentAlgo);
+                        const result = `${t('hashFileResult')}:\n${hashHex}\n\n${t('hashFileName')}: ${selectedFile.name}\n${t('hashFileSize')}: ${formatFileSize(selectedFile.size)}\n${t('hashLength')}: ${hashHex.length * 4} ${t('infoBits')} (${hashHex.length} ${t('infoChars')})`;
+                        outputBox.textContent = result;
+                        outputBox.classList.remove('error');
+                    } catch (err) {
+                        outputBox.textContent = '错误: ' + err.message;
+                        outputBox.classList.add('error');
+                    }
+                    return;
+                }
+
+                if (!inputTextEl) {
                     alert('找不到输入元素');
                     return;
                 }
@@ -2315,6 +2588,233 @@
             return result;
         }
 
+        // 输入类型切换
+        let currentInputType = 'text';
+        let selectedFile = null;
+
+        function switchInputType(type) {
+            currentInputType = type;
+            document.querySelectorAll('.input-type-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const textArea = document.getElementById('textInputArea');
+            const fileArea = document.getElementById('fileInputArea');
+
+            if (type === 'text') {
+                textArea.style.display = 'block';
+                fileArea.style.display = 'none';
+                selectedFile = null;
+                document.getElementById('fileInfo').style.display = 'none';
+                document.getElementById('fileDropZone').querySelector('.file-drop-content').style.display = 'flex';
+            } else {
+                textArea.style.display = 'none';
+                fileArea.style.display = 'block';
+            }
+        }
+
+        // 文件拖拽处理
+        function setupFileDropZone() {
+            const dropZone = document.getElementById('fileDropZone');
+            if (!dropZone) return;
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+
+            dropZone.addEventListener('click', (e) => {
+                if (e.target.closest('.btn-clear-file') || e.target.closest('.file-info')) return;
+                document.getElementById('fileInput').click();
+            });
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFile(file) {
+            selectedFile = file;
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const dropContent = document.getElementById('fileDropZone').querySelector('.file-drop-content');
+
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.style.display = 'flex';
+            dropContent.style.display = 'none';
+        }
+
+        function clearFile() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('fileDropZone').querySelector('.file-drop-content').style.display = 'flex';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 计算文件哈希
+        async function calculateFileHash(file, algorithm) {
+            // Web Crypto API 支持的算法
+            const webCryptoAlgos = {
+                'SHA1': 'SHA-1',
+                'SHA256': 'SHA-256',
+                'SHA384': 'SHA-384',
+                'SHA512': 'SHA-512'
+            };
+
+            // CryptoJS 支持的算法（用于 MD5 和 SHA-224）
+            const cryptoJSAlgos = {
+                'MD5': CryptoJS.MD5,
+                'SHA224': CryptoJS.SHA224
+            };
+
+            if (webCryptoAlgos[algorithm]) {
+                // 使用 Web Crypto API（更高效）
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        try {
+                            const buffer = e.target.result;
+                            const hashBuffer = await crypto.subtle.digest(webCryptoAlgos[algorithm], buffer);
+                            const hashArray = Array.from(new Uint8Array(hashBuffer));
+                            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                            resolve(hashHex);
+                        } catch (err) {
+                            reject(err);
+                        }
+                    };
+                    reader.onerror = () => reject(reader.error);
+                    reader.readAsArrayBuffer(file);
+                });
+            } else if (cryptoJSAlgos[algorithm]) {
+                // 使用 CryptoJS（支持 MD5 和 SHA-224）
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const arrayBuffer = e.target.result;
+                            const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
+                            const hash = cryptoJSAlgos[algorithm](wordArray).toString();
+                            resolve(hash);
+                        } catch (err) {
+                            reject(err);
+                        }
+                    };
+                    reader.onerror = () => reject(reader.error);
+                    reader.readAsArrayBuffer(file);
+                });
+            } else {
+                throw new Error(t('hashAlgoNotSupported'));
+            }
+        }
+
+        // 计算所有哈希值
+        async function processAllHashes() {
+            const outputBox = document.getElementById('outputBox');
+            if (!outputBox) return;
+
+            outputBox.classList.remove('error');
+            outputBox.textContent = t('hashCalculating');
+
+            const hashAlgos = ['MD5', 'SHA1', 'SHA224', 'SHA256', 'SHA384', 'SHA512'];
+            const sha3Lengths = [224, 256, 384, 512];
+
+            try {
+                let results = '';
+
+                if (currentInputType === 'file') {
+                    if (!selectedFile) {
+                        outputBox.textContent = t('hashSelectFile');
+                        outputBox.classList.add('error');
+                        return;
+                    }
+
+                    results += `${t('hashFileName')}: ${selectedFile.name}\n`;
+                    results += `${t('hashFileSize')}: ${formatFileSize(selectedFile.size)}\n`;
+                    results += `${'─'.repeat(50)}\n\n`;
+
+                    // 计算基础哈希
+                    for (const algo of hashAlgos) {
+                        const hashHex = await calculateFileHash(selectedFile, algo);
+                        results += `${algo}: ${hashHex}\n`;
+                    }
+
+                    // SHA-3 系列 (使用 CryptoJS，需要读取文件一次)
+                    const reader = new FileReader();
+                    const sha3Results = await new Promise((resolve, reject) => {
+                        reader.onload = (e) => {
+                            try {
+                                const wordArray = CryptoJS.lib.WordArray.create(e.target.result);
+                                const hashes = {};
+                                for (const length of sha3Lengths) {
+                                    hashes[length] = CryptoJS.SHA3(wordArray, { outputLength: length }).toString();
+                                }
+                                resolve(hashes);
+                            } catch (err) {
+                                reject(err);
+                            }
+                        };
+                        reader.onerror = () => reject(reader.error);
+                        reader.readAsArrayBuffer(selectedFile);
+                    });
+                    for (const length of sha3Lengths) {
+                        results += `SHA3-${length}: ${sha3Results[length]}\n`;
+                    }
+                } else {
+                    const inputTextEl = document.getElementById('inputText');
+                    if (!inputTextEl || !inputTextEl.value.trim()) {
+                        outputBox.textContent = '请输入文本';
+                        outputBox.classList.add('error');
+                        return;
+                    }
+
+                    const text = inputTextEl.value;
+
+                    // 计算基础哈希
+                    for (const algo of hashAlgos) {
+                        const hashHex = CryptoJS[algo](text).toString();
+                        results += `${algo}: ${hashHex}\n`;
+                    }
+
+                    // SHA-3 系列
+                    for (const length of sha3Lengths) {
+                        const sha3Hash = CryptoJS.SHA3(text, { outputLength: length }).toString();
+                        results += `SHA3-${length}: ${sha3Hash}\n`;
+                    }
+                }
+
+                outputBox.textContent = results;
+            } catch (err) {
+                outputBox.textContent = '错误: ' + err.message;
+                outputBox.classList.add('error');
+            }
+        }
+
         // 哈希处理
         function processHash(text) {
             let result;
@@ -2326,7 +2826,7 @@
                 result = CryptoJS[currentAlgo](text).toString();
             }
 
-            return `哈希值:\n${result}\n\n长度: ${result.length * 4} 位 (${result.length} 字符)`;
+            return `${t('hashValue')}:\n${result}\n\n${t('hashLength')}: ${result.length * 4} ${t('infoBits')} (${result.length} ${t('infoChars')})`;
         }
 
         // HMAC处理
