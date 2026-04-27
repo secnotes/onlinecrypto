@@ -15,6 +15,28 @@ A frontend encryption/decryption tool based on Crypto.js. All operations are per
 - **RC4** - Stream cipher, simple and fast
 - **RC4Drop** - Improved RC4 version with better security
 
+### Asymmetric Encryption (Public Key)
+- **RSA** - RSA asymmetric encryption algorithm
+  - Key sizes: 1024, 2048, 4096 bits
+  - Encrypt/Decrypt mode: RSA-OAEP
+  - Sign/Verify mode: RSA-PSS
+  - Key formats: PEM, DER (Hex), Base64
+
+- **ECDSA** - Elliptic Curve Digital Signature Algorithm
+  - Supported curves: P-256, P-384, P-521
+  - Features: Sign/Verify
+  - Key format: JWK (JSON Web Key)
+
+- **ECDH** - Elliptic Curve Diffie-Hellman
+  - Supported curves: P-256, P-384, P-521
+  - Features: Derive shared key (for AES-256-GCM)
+  - Key format: JWK
+
+- **Ed25519** - EdDSA signature algorithm
+  - Based on twisted Edwards curve
+  - Features: Sign/Verify
+  - Short keys (32 bytes), fast signing
+
 ### Hash Algorithms
 - **MD5** - 128-bit hash (not recommended for security purposes)
 - **SHA-1** - 160-bit hash (being phased out)
@@ -84,8 +106,14 @@ Simply open `index.html` in your browser. No installation or server required.
 ## Technology
 
 - Pure HTML/CSS/JavaScript
-- [Crypto.js](https://github.com/brix/crypto-js) for cryptographic operations
+- [Crypto.js](https://github.com/brix/crypto-js) for symmetric encryption, hash, etc.
+- Web Crypto API for asymmetric encryption (RSA, ECDSA, ECDH, Ed25519)
 - Responsive design for desktop and mobile
+
+## Notes
+
+- Asymmetric encryption algorithms (RSA, ECDSA, ECDH, Ed25519) only work on HTTPS or localhost
+- RSA encryption has data length limits (~190 bytes max for 2048-bit keys)
 
 ## License
 

@@ -762,6 +762,18 @@
                 </div>
                 <div class="category collapsed">
                     <div class="category-header" onclick="toggleCategory(this)">
+                        <span id="catAsymmetric">公钥加密</span>
+                        <span class="category-arrow">▼</span>
+                    </div>
+                    <div class="category-content">
+                        <button class="algorithm-btn" data-algo="RSA">RSA</button>
+                        <button class="algorithm-btn" data-algo="ECDSA">ECDSA</button>
+                        <button class="algorithm-btn" data-algo="ECDH">ECDH</button>
+                        <button class="algorithm-btn" data-algo="Ed25519">Ed25519</button>
+                    </div>
+                </div>
+                <div class="category collapsed">
+                    <div class="category-header" onclick="toggleCategory(this)">
                         <span id="catHash">哈希算法</span>
                         <span class="category-arrow">▼</span>
                     </div>
@@ -841,6 +853,7 @@
 
                 // 分类
                 catSymmetric: '对称加密',
+                catAsymmetric: '公钥加密',
                 catHash: '哈希算法',
                 catHMAC: 'HMAC',
                 catEncoding: '编码工具',
@@ -1023,6 +1036,10 @@
                 algoUniversalConvert: '综合转换',
                 algoPBKDF2: 'PBKDF2',
                 algoEvpKDF: 'EvpKDF',
+                algoRSA: 'RSA',
+                algoECDSA: 'ECDSA',
+                algoECDH: 'ECDH',
+                algoEd25519: 'Ed25519',
 
                 // 算法徽章
                 badge对称加密: '对称加密',
@@ -1030,6 +1047,57 @@
                 badge消息认证: '消息认证',
                 badge编码工具: '编码工具',
                 badge密钥派生: '密钥派生',
+                badge公钥加密: '公钥加密',
+
+                // RSA相关
+                lblPublicKey: '公钥',
+                lblPrivateKey: '私钥',
+                lblRSAOperation: '操作类型',
+                lblKeySizeRSA: '密钥长度',
+                btnGenerateKeyPair: '生成密钥对',
+                rsaEncryptOp: '加密',
+                rsaDecryptOp: '解密',
+                rsaSignOp: '签名',
+                rsaVerifyOp: '验证',
+                lblSignature: '签名值',
+                rsaKeyGenerated: '密钥对已生成',
+                rsaPublicKeyPEM: '公钥（PEM格式）',
+                rsaPrivateKeyPEM: '私钥（PEM格式）',
+                rsaInputPublicKey: '输入公钥（PEM格式）',
+                rsaInputPrivateKey: '输入私钥（PEM格式）',
+                rsaKeyGenWarning: '请先生成或导入密钥对',
+                rsaSignSuccess: '签名成功',
+                rsaVerifySuccess: '验证成功：签名有效',
+                rsaVerifyFailed: '验证失败：签名无效',
+                rsaDataTooLarge: '数据过长，RSA加密数据长度有限制',
+                rsaImportPublicKey: '导入公钥',
+                rsaImportPrivateKey: '导入私钥',
+                rsaModeEncrypt: '加密/解密',
+                rsaModeSign: '签名/验证',
+                rsaKeyFormat: '密钥格式',
+                rsaInfoBox: 'RSA 加密数据有长度限制（2048位密钥最大约190字节）。签名/验证模式使用 RSA-PSS 算法，加密/解密模式使用 RSA-OAEP 算法。',
+                rsaWebCryptoNote: '注意：Web Crypto API 仅在 HTTPS 或 localhost 下工作。',
+                rsaSignaturePlaceholder: '输入签名值（Base64格式）',
+                rsaSameKeyParams: '注意: 加密和签名使用相同的密钥参数',
+                rsaConvertError: '格式转换失败',
+                rsaNoSignature: '请输入签名值',
+                lblECCurve: '椭圆曲线',
+                curveP256: 'P-256 (secp256r1)',
+                curveP384: 'P-384 (secp384r1)',
+                curveP521: 'P-521 (secp521r1)',
+                ecdsaSignOp: '签名',
+                ecdsaVerifyOp: '验证',
+                ecdhDeriveOp: '派生共享密钥',
+                ed25519SignOp: '签名',
+                ed25519VerifyOp: '验证',
+                lblSharedSecret: '共享密钥',
+                lblECPublicKey: '公钥（JWK格式）',
+                lblECPrivateKey: '私钥（JWK格式）',
+                ecKeyGenerated: '密钥对已生成',
+                ecInfoBox: 'ECDSA 用于数字签名，ECDH 用于密钥交换。椭圆曲线密码学比RSA更高效，相同安全级别下密钥更短。',
+                ed25519InfoBox: 'Ed25519 是现代高效的签名算法，使用扭曲 Edwards 曲线。签名速度快，密钥短（32字节）。',
+                ecOtherPublicKeyPlaceholder: '输入对方的公钥（JWK格式）',
+                ecDeriveError: '密钥派生失败',
 
                 // 算法描述
                 descAES: '高级加密标准，目前最流行的对称加密算法之一，安全可靠。',
@@ -1055,6 +1123,10 @@
                 descUniversalConvert: '自动识别输入格式（UTF-8、Hex、Base64、Inline、C-Array、Python），并输出所有其他格式。',
                 descPBKDF2: '基于密码的密钥派生函数，用于从密码生成加密密钥。',
                 descEvpKDF: 'OpenSSL EVP 密钥派生函数，常用于 OpenSSL 兼容的密钥生成。',
+                descRSA: 'RSA非对称加密算法，支持加密/解密和签名/验证。使用 Web Crypto API 实现。',
+                descECDSA: '椭圆曲线数字签名算法（ECDSA），比RSA更高效的签名算法。',
+                descECDH: '椭圆曲线密钥交换算法（ECDH），用于安全地协商共享密钥。',
+                descEd25519: 'Ed25519签名算法，基于扭曲Edwards曲线，高效安全。',
             },
             en: {
                 // Title
@@ -1064,6 +1136,7 @@
 
                 // Categories
                 catSymmetric: 'Symmetric',
+                catAsymmetric: 'Asymmetric',
                 catHash: 'Hash',
                 catHMAC: 'HMAC',
                 catEncoding: 'Encoding',
@@ -1245,6 +1318,10 @@
                 algoUniversalConvert: 'Universal Converter',
                 algoPBKDF2: 'PBKDF2',
                 algoEvpKDF: 'EvpKDF',
+                algoRSA: 'RSA',
+                algoECDSA: 'ECDSA',
+                algoECDH: 'ECDH',
+                algoEd25519: 'Ed25519',
 
                 // Algorithm badges
                 badge对称加密: 'Symmetric',
@@ -1252,6 +1329,57 @@
                 badge消息认证: 'Message Auth',
                 badge编码工具: 'Encoding',
                 badge密钥派生: 'Key Derivation',
+                badge公钥加密: 'Asymmetric',
+
+                // RSA related
+                lblPublicKey: 'Public Key',
+                lblPrivateKey: 'Private Key',
+                lblRSAOperation: 'Operation',
+                lblKeySizeRSA: 'Key Size',
+                btnGenerateKeyPair: 'Generate Key Pair',
+                rsaEncryptOp: 'Encrypt',
+                rsaDecryptOp: 'Decrypt',
+                rsaSignOp: 'Sign',
+                rsaVerifyOp: 'Verify',
+                lblSignature: 'Signature',
+                rsaKeyGenerated: 'Key pair generated',
+                rsaPublicKeyPEM: 'Public Key (PEM format)',
+                rsaPrivateKeyPEM: 'Private Key (PEM format)',
+                rsaInputPublicKey: 'Enter Public Key (PEM format)',
+                rsaInputPrivateKey: 'Enter Private Key (PEM format)',
+                rsaKeyGenWarning: 'Please generate or import a key pair first',
+                rsaSignSuccess: 'Signature created successfully',
+                rsaVerifySuccess: 'Verification successful: signature is valid',
+                rsaVerifyFailed: 'Verification failed: signature is invalid',
+                rsaDataTooLarge: 'Data too large, RSA encryption has length limits',
+                rsaImportPublicKey: 'Import Public Key',
+                rsaImportPrivateKey: 'Import Private Key',
+                rsaModeEncrypt: 'Encrypt/Decrypt',
+                rsaModeSign: 'Sign/Verify',
+                rsaKeyFormat: 'Key Format',
+                rsaInfoBox: 'RSA encryption has data length limits (max ~190 bytes for 2048-bit keys). Sign/Verify uses RSA-PSS, Encrypt/Decrypt uses RSA-OAEP.',
+                rsaWebCryptoNote: 'Note: Web Crypto API only works on HTTPS or localhost.',
+                rsaSignaturePlaceholder: 'Enter signature (Base64 format)',
+                rsaSameKeyParams: 'Note: Encryption and signing use the same key parameters',
+                rsaConvertError: 'Format conversion failed',
+                rsaNoSignature: 'Please enter signature',
+                lblECCurve: 'Elliptic Curve',
+                curveP256: 'P-256 (secp256r1)',
+                curveP384: 'P-384 (secp384r1)',
+                curveP521: 'P-521 (secp521r1)',
+                ecdsaSignOp: 'Sign',
+                ecdsaVerifyOp: 'Verify',
+                ecdhDeriveOp: 'Derive Shared Key',
+                ed25519SignOp: 'Sign',
+                ed25519VerifyOp: 'Verify',
+                lblSharedSecret: 'Shared Secret',
+                lblECPublicKey: 'Public Key (JWK format)',
+                lblECPrivateKey: 'Private Key (JWK format)',
+                ecKeyGenerated: 'Key pair generated',
+                ecInfoBox: 'ECDSA for digital signatures, ECDH for key exchange. Elliptic curve cryptography is more efficient than RSA with shorter keys.',
+                ed25519InfoBox: 'Ed25519 is a modern efficient signature algorithm using twisted Edwards curve. Fast signing, short keys (32 bytes).',
+                ecOtherPublicKeyPlaceholder: 'Enter other party\'s public key (JWK format)',
+                ecDeriveError: 'Key derivation failed',
 
                 // Algorithm descriptions
                 descAES: 'Advanced Encryption Standard, one of the most popular symmetric encryption algorithms, secure and reliable.',
@@ -1277,6 +1405,10 @@
                 descUniversalConvert: 'Auto-detect input format (UTF-8, Hex, Base64, Inline, C-Array, Python) and output all other formats.',
                 descPBKDF2: 'Password-based key derivation function, generates encryption keys from passwords.',
                 descEvpKDF: 'OpenSSL EVP key derivation function, compatible with OpenSSL key generation.',
+                descRSA: 'RSA asymmetric encryption algorithm, supports encryption/decryption and signing/verification. Implemented using Web Crypto API.',
+                descECDSA: 'Elliptic Curve Digital Signature Algorithm (ECDSA), more efficient than RSA for signatures.',
+                descECDH: 'Elliptic Curve Diffie-Hellman (ECDH), for secure key exchange.',
+                descEd25519: 'Ed25519 signature algorithm, based on twisted Edwards curve, efficient and secure.',
             }
         };
 
@@ -1549,6 +1681,48 @@
                 needsPassword: true,
                 needsSalt: true,
                 needsKeySize: true
+            },
+            RSA: {
+                name: 'RSA',
+                badge: '公钥加密',
+                description: 'RSA非对称加密算法，支持加密/解密和签名/验证。',
+                hasDecrypt: true,
+                needsKey: false,
+                isRSA: true,
+                supportsRSAMode: true,
+                keySizes: [1024, 2048, 4096],
+                defaultKeySize: 2048
+            },
+            ECDSA: {
+                name: 'ECDSA',
+                badge: '公钥加密',
+                description: '椭圆曲线数字签名算法（ECDSA），比RSA更高效的签名算法。',
+                hasDecrypt: true,
+                needsKey: false,
+                isEC: true,
+                isECDSA: true,
+                curves: ['P-256', 'P-384', 'P-521'],
+                defaultCurve: 'P-256'
+            },
+            ECDH: {
+                name: 'ECDH',
+                badge: '公钥加密',
+                description: '椭圆曲线密钥交换算法（ECDH），用于安全地协商共享密钥。',
+                hasDecrypt: false,
+                needsKey: false,
+                isEC: true,
+                isECDH: true,
+                curves: ['P-256', 'P-384', 'P-521'],
+                defaultCurve: 'P-256'
+            },
+            Ed25519: {
+                name: 'Ed25519',
+                badge: '公钥加密',
+                description: 'Ed25519签名算法，基于扭曲Edwards曲线，高效安全。',
+                hasDecrypt: true,
+                needsKey: false,
+                isEC: true,
+                isEd25519: true
             }
         };
 
@@ -1686,6 +1860,36 @@
                 html += `<div class="warning-box">${t('warnMD5')}</div>`;
             } else if (algoName === 'RC4') {
                 html += `<div class="warning-box">${t('warnRC4')}</div>`;
+            }
+
+            // RSA 信息提示
+            if (algoName === 'RSA') {
+                html += `
+                    <div class="info-box">
+                        ${t('rsaInfoBox')}<br>
+                        ${t('rsaWebCryptoNote')}
+                    </div>
+                `;
+            }
+
+            // ECDSA/ECDH 信息提示
+            if (algoName === 'ECDSA' || algoName === 'ECDH') {
+                html += `
+                    <div class="info-box">
+                        ${t('ecInfoBox')}<br>
+                        ${t('rsaWebCryptoNote')}
+                    </div>
+                `;
+            }
+
+            // Ed25519 信息提示
+            if (algoName === 'Ed25519') {
+                html += `
+                    <div class="info-box">
+                        ${t('ed25519InfoBox')}<br>
+                        ${t('rsaWebCryptoNote')}
+                    </div>
+                `;
             }
 
             // 综合转换说明
@@ -1954,6 +2158,178 @@
                 `;
             }
 
+            // RSA 特殊 UI
+            if (algo.isRSA) {
+                html += `
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>${t('lblKeySizeRSA')}</label>
+                            <select id="rsaKeySize">
+                                <option value="1024">1024 ${t('infoBits')}</option>
+                                <option value="2048" selected>2048 ${t('infoBits')}</option>
+                                <option value="4096">4096 ${t('infoBits')}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>${t('lblRSAOperation')}</label>
+                            <select id="rsaMode" onchange="updateRSAUI()">
+                                <option value="encrypt">${t('rsaModeEncrypt')}</option>
+                                <option value="sign">${t('rsaModeSign')}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button class="btn btn-secondary" onclick="generateRSAKeyPair()" style="width: 100%;">${t('btnGenerateKeyPair')}</button>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 3;">
+                            <label>${t('rsaPublicKeyPEM')}</label>
+                            <textarea id="rsaPublicKey" rows="6" placeholder="${t('rsaInputPublicKey')}" style="font-size: 0.8rem;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>${t('rsaKeyFormat')}</label>
+                            <select id="rsaPublicKeyFormat" onchange="convertRSAKeyFormat('public')">
+                                <option value="PEM">PEM</option>
+                                <option value="DER">DER (Hex)</option>
+                                <option value="Base64">Base64</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 3;">
+                            <label>${t('rsaPrivateKeyPEM')}</label>
+                            <textarea id="rsaPrivateKey" rows="6" placeholder="${t('rsaInputPrivateKey')}" style="font-size: 0.8rem;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>${t('rsaKeyFormat')}</label>
+                            <select id="rsaPrivateKeyFormat" onchange="convertRSAKeyFormat('private')">
+                                <option value="PEM">PEM</option>
+                                <option value="DER">DER (Hex)</option>
+                                <option value="Base64">Base64</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="rsaSignatureGroup" style="display: none;">
+                        <div class="form-group">
+                            <label>${t('lblSignature')}</label>
+                            <textarea id="rsaSignature" rows="3" placeholder="${t('rsaSignaturePlaceholder')}"></textarea>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // ECDSA 特殊 UI
+            if (algo.isECDSA) {
+                html += `
+                    <div class="mode-toggle" id="ecdsaOperationToggle">
+                        <button type="button" class="mode-btn ${currentMode === 'encrypt' ? 'active' : ''}" onclick="switchECMode('encrypt')">${t('ecdsaSignOp')}</button>
+                        <button type="button" class="mode-btn ${currentMode === 'decrypt' ? 'active' : ''}" onclick="switchECMode('decrypt')">${t('ecdsaVerifyOp')}</button>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>${t('lblECCurve')}</label>
+                            <select id="ecCurve">
+                                <option value="P-256">${t('curveP256')}</option>
+                                <option value="P-384">${t('curveP384')}</option>
+                                <option value="P-521">${t('curveP521')}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button class="btn btn-secondary" onclick="generateECKeyPair('ECDSA')" style="width: 100%;">${t('btnGenerateKeyPair')}</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>${t('lblECPublicKey')}</label>
+                        <textarea id="ecPublicKey" rows="4" placeholder="..." style="font-size: 0.8rem;"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>${t('lblECPrivateKey')}</label>
+                        <textarea id="ecPrivateKey" rows="4" placeholder="..." style="font-size: 0.8rem;"></textarea>
+                    </div>
+
+                    <div id="ecSignatureGroup" style="display: ${currentMode === 'decrypt' ? 'block' : 'none'};">
+                        <div class="form-group">
+                            <label>${t('lblSignature')}</label>
+                            <textarea id="ecSignature" rows="3" placeholder="${t('rsaSignaturePlaceholder')}"></textarea>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // ECDH 特殊 UI
+            if (algo.isECDH) {
+                html += `
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>${t('lblECCurve')}</label>
+                            <select id="ecCurve">
+                                <option value="P-256">${t('curveP256')}</option>
+                                <option value="P-384">${t('curveP384')}</option>
+                                <option value="P-521">${t('curveP521')}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button class="btn btn-secondary" onclick="generateECKeyPair('ECDH')" style="width: 100%;">${t('btnGenerateKeyPair')}</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>${t('lblECPublicKey')} (${t('lblPublicKey')})</label>
+                        <textarea id="ecPublicKey" rows="4" placeholder="..." style="font-size: 0.8rem;"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>${t('lblECPrivateKey')}</label>
+                        <textarea id="ecPrivateKey" rows="4" placeholder="..." style="font-size: 0.8rem;"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>${t('lblECPublicKey')} (${t('lblPublicKey')} - 对方)</label>
+                        <textarea id="ecOtherPublicKey" rows="4" placeholder="${t('ecOtherPublicKeyPlaceholder')}" style="font-size: 0.8rem;"></textarea>
+                    </div>
+                `;
+            }
+
+            // Ed25519 特殊 UI
+            if (algo.isEd25519) {
+                html += `
+                    <div class="mode-toggle" id="edOperationToggle">
+                        <button type="button" class="mode-btn ${currentMode === 'encrypt' ? 'active' : ''}" onclick="switchECMode('encrypt')">${t('ed25519SignOp')}</button>
+                        <button type="button" class="mode-btn ${currentMode === 'decrypt' ? 'active' : ''}" onclick="switchECMode('decrypt')">${t('ed25519VerifyOp')}</button>
+                    </div>
+
+                    <div class="form-group">
+                        <button class="btn btn-secondary" onclick="generateEd25519KeyPair()" style="width: 100%;">${t('btnGenerateKeyPair')}</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>${t('lblECPublicKey')}</label>
+                        <textarea id="edPublicKey" rows="2" placeholder="..." style="font-size: 0.8rem;"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>${t('lblECPrivateKey')}</label>
+                        <textarea id="edPrivateKey" rows="2" placeholder="..." style="font-size: 0.8rem;"></textarea>
+                    </div>
+
+                    <div id="edSignatureGroup" style="display: ${currentMode === 'decrypt' ? 'block' : 'none'};">
+                        <div class="form-group">
+                            <label>${t('lblSignature')}</label>
+                            <textarea id="edSignature" rows="3" placeholder="${t('rsaSignaturePlaceholder')}"></textarea>
+                        </div>
+                    </div>
+                `;
+            }
+
             // 输入编码（解密时）
             if (algo.hasDecrypt && algo.needsKey && currentMode === 'decrypt') {
                 html += `
@@ -1977,8 +2353,23 @@
             }
 
             // 按钮行
-            const mainBtnText = algo.isUniversal ? t('btnConvert') :
-                (algo.hasDecrypt ? (currentMode === 'encrypt' ? t('btnProcess') : t('btnProcessDecrypt')) : t('btnCalculate'));
+            let mainBtnText;
+            if (algo.isRSA) {
+                const rsaMode = 'encrypt'; // Will be updated dynamically
+                mainBtnText = currentMode === 'encrypt' ? t('rsaEncryptOp') : t('rsaDecryptOp');
+            } else if (algo.isECDSA) {
+                mainBtnText = currentMode === 'encrypt' ? t('ecdsaSignOp') : t('ecdsaVerifyOp');
+            } else if (algo.isECDH) {
+                mainBtnText = t('ecdhDeriveOp');
+            } else if (algo.isEd25519) {
+                mainBtnText = currentMode === 'encrypt' ? t('ed25519SignOp') : t('ed25519VerifyOp');
+            } else if (algo.isUniversal) {
+                mainBtnText = t('btnConvert');
+            } else if (algo.hasDecrypt) {
+                mainBtnText = currentMode === 'encrypt' ? t('btnProcess') : t('btnProcessDecrypt');
+            } else {
+                mainBtnText = t('btnCalculate');
+            }
             html += `
                 <div class="btn-row">
                     <button class="btn btn-primary" onclick="process()">
@@ -2014,6 +2405,11 @@
             // 初始化文件拖拽区域
             if (algo.supportsFile) {
                 setupFileDropZone();
+            }
+
+            // 初始化 RSA UI
+            if (algo.isRSA) {
+                updateRSAUI();
             }
         }
 
@@ -2303,6 +2699,14 @@
                     result = processEvpKDF();
                 } else if (currentAlgo === 'UniversalConvert') {
                     result = processUniversalConvert(inputText);
+                } else if (currentAlgo === 'RSA') {
+                    result = await processRSA(inputText);
+                } else if (currentAlgo === 'ECDSA') {
+                    result = await processECDSA(inputText);
+                } else if (currentAlgo === 'ECDH') {
+                    result = await processECDH(inputText);
+                } else if (currentAlgo === 'Ed25519') {
+                    result = await processEd25519(inputText);
                 }
 
                 outputBox.textContent = result;
@@ -2969,6 +3373,682 @@
             return result;
         }
 
+        // RSA 相关变量
+        let rsaKeyPair = null;
+        let rsaMode = 'encrypt'; // 'encrypt' 或 'sign'
+        let rsaDERData = { public: null, private: null }; // 存储 DER 二进制数据
+
+        // RSA 密钥对生成
+        async function generateRSAKeyPair() {
+            const keySize = parseInt(document.getElementById('rsaKeySize')?.value || 2048);
+            const outputBox = document.getElementById('outputBox');
+
+            outputBox.textContent = t('hashCalculating');
+
+            try {
+                // 生成加密用的密钥对
+                const encryptKeyPair = await window.crypto.subtle.generateKey(
+                    {
+                        name: "RSA-OAEP",
+                        modulusLength: keySize,
+                        publicExponent: new Uint8Array([1, 0, 1]),
+                        hash: "SHA-256"
+                    },
+                    true,
+                    ["encrypt", "decrypt"]
+                );
+
+                // 生成签名用的密钥对
+                const signKeyPair = await window.crypto.subtle.generateKey(
+                    {
+                        name: "RSA-PSS",
+                        modulusLength: keySize,
+                        publicExponent: new Uint8Array([1, 0, 1]),
+                        hash: "SHA-256"
+                    },
+                    true,
+                    ["sign", "verify"]
+                );
+
+                // 导出 DER 数据
+                const publicKeyDER = await window.crypto.subtle.exportKey('spki', encryptKeyPair.publicKey);
+                const privateKeyDER = await window.crypto.subtle.exportKey('pkcs8', encryptKeyPair.privateKey);
+
+                // 存储 DER 数据
+                rsaDERData = {
+                    public: new Uint8Array(publicKeyDER),
+                    private: new Uint8Array(privateKeyDER)
+                };
+
+                // 导出为 PEM 格式
+                const publicKeyPEM = await exportKeyToPEM(encryptKeyPair.publicKey, 'public');
+                const privateKeyPEM = await exportKeyToPEM(encryptKeyPair.privateKey, 'private');
+
+                // 保存密钥对
+                rsaKeyPair = {
+                    encrypt: encryptKeyPair,
+                    sign: signKeyPair
+                };
+
+                // 显示在输入框中（默认 PEM 格式）
+                document.getElementById('rsaPublicKey').value = publicKeyPEM;
+                document.getElementById('rsaPrivateKey').value = privateKeyPEM;
+                document.getElementById('rsaPublicKeyFormat').value = 'PEM';
+                document.getElementById('rsaPrivateKeyFormat').value = 'PEM';
+
+                let result = `${t('rsaKeyGenerated')}\n`;
+                result += `${t('lblKeySizeRSA')}: ${keySize} ${t('infoBits')}\n\n`;
+                result += `DER 数据长度:\n`;
+                result += `  ${t('lblPublicKey')}: ${rsaDERData.public.length} 字节\n`;
+                result += `  ${t('lblPrivateKey')}: ${rsaDERData.private.length} 字节\n\n`;
+                result += `${t('rsaSameKeyParams')}`;
+
+                outputBox.textContent = result;
+                outputBox.classList.remove('error');
+                showToast(t('rsaKeyGenerated'));
+            } catch (err) {
+                outputBox.textContent = '错误: ' + err.message;
+                outputBox.classList.add('error');
+            }
+        }
+
+        // PEM 导出
+        async function exportKeyToPEM(key, type) {
+            const exported = await window.crypto.subtle.exportKey(
+                type === 'public' ? 'spki' : 'pkcs8',
+                key
+            );
+            const base64 = btoa(String.fromCharCode(...new Uint8Array(exported)));
+            const pemType = type === 'public' ? 'PUBLIC' : 'PRIVATE';
+            // 将 Base64 分行显示（每行 64 字符）
+            const formattedBase64 = base64.match(/.{1,64}/g).join('\n');
+            return `-----BEGIN ${pemType} KEY-----\n${formattedBase64}\n-----END ${pemType} KEY-----`;
+        }
+
+        // PEM 转 DER
+        function pemToDer(pem) {
+            const base64 = pem
+                .replace(/-----[\w\s]+KEY-----/g, '')
+                .replace(/\s/g, '');
+            return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+        }
+
+        // DER 转 PEM
+        function derToPem(der, type) {
+            const base64 = btoa(String.fromCharCode(...der));
+            const formattedBase64 = base64.match(/.{1,64}/g).join('\n');
+            const pemType = type === 'public' ? 'PUBLIC' : 'PRIVATE';
+            return `-----BEGIN ${pemType} KEY-----\n${formattedBase64}\n-----END ${pemType} KEY-----`;
+        }
+
+        // DER 转 Hex
+        function derToHex(der) {
+            return Array.from(der).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Hex 转 DER
+        function hexToDer(hex) {
+            const bytes = [];
+            for (let i = 0; i < hex.length; i += 2) {
+                bytes.push(parseInt(hex.substr(i, 2), 16));
+            }
+            return new Uint8Array(bytes);
+        }
+
+        // Base64 转 DER
+        function base64ToDer(base64) {
+            return Uint8Array.from(atob(base64.replace(/\s/g, '')), c => c.charCodeAt(0));
+        }
+
+        // DER 转 Base64
+        function derToBase64(der) {
+            return btoa(String.fromCharCode(...der));
+        }
+
+        // RSA 密钥格式转换
+        function convertRSAKeyFormat(type) {
+            const textarea = document.getElementById(type === 'public' ? 'rsaPublicKey' : 'rsaPrivateKey');
+            const formatSelect = document.getElementById(type === 'public' ? 'rsaPublicKeyFormat' : 'rsaPrivateKeyFormat');
+            const currentFormat = formatSelect?.value || 'PEM';
+            const currentValue = textarea?.value || '';
+
+            if (!currentValue.trim()) return;
+
+            try {
+                let der;
+
+                // 先转换为 DER（中间格式）
+                if (currentValue.includes('-----BEGIN')) {
+                    // 当前是 PEM 格式
+                    der = pemToDer(currentValue);
+                    rsaDERData[type] = der; // 存储 DER 数据
+                } else if (/^[0-9a-fA-F]+$/.test(currentValue.replace(/\s/g, ''))) {
+                    // 当前是 Hex 格式
+                    der = hexToDer(currentValue.replace(/\s/g, ''));
+                    rsaDERData[type] = der;
+                } else {
+                    // 当前是 Base64 格式
+                    der = base64ToDer(currentValue);
+                    rsaDERData[type] = der;
+                }
+
+                // 转换为目标格式
+                let result;
+                switch (currentFormat) {
+                    case 'PEM':
+                        result = derToPem(der, type);
+                        break;
+                    case 'DER':
+                        result = derToHex(der);
+                        break;
+                    case 'Base64':
+                        result = derToBase64(der);
+                        break;
+                    default:
+                        result = derToPem(der, type);
+                }
+
+                textarea.value = result;
+            } catch (err) {
+                showToast(t('rsaConvertError') + ': ' + err.message);
+            }
+        }
+
+        // PEM 转 DER 转换按钮
+        // 密钥导入（支持 PEM、DER/Hex、Base64 格式）
+        async function importKeyFromPEM(keyData, type, algorithm) {
+            let binary;
+
+            // 检测格式并转换为 DER
+            if (keyData.includes('-----BEGIN')) {
+                // PEM 格式
+                const base64 = keyData
+                    .replace(/-----[\w\s]+KEY-----/g, '')
+                    .replace(/\s/g, '');
+                binary = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+            } else if (/^[0-9a-fA-F]+$/.test(keyData.replace(/\s/g, ''))) {
+                // Hex/DER 格式
+                const hex = keyData.replace(/\s/g, '');
+                binary = hexToDer(hex);
+            } else {
+                // Base64 格式
+                binary = Uint8Array.from(atob(keyData.replace(/\s/g, '')), c => c.charCodeAt(0));
+            }
+
+            // 存储 DER 数据
+            rsaDERData[type] = binary;
+
+            const keyUsages = type === 'public'
+                ? (algorithm.name === 'RSA-OAEP' ? ['encrypt'] : ['verify'])
+                : (algorithm.name === 'RSA-OAEP' ? ['decrypt'] : ['sign']);
+
+            return await window.crypto.subtle.importKey(
+                type === 'public' ? 'spki' : 'pkcs8',
+                binary,
+                algorithm,
+                true,
+                keyUsages
+            );
+        }
+
+        // RSA 加密
+        async function rsaEncrypt(text, publicKey) {
+            const encoded = new TextEncoder().encode(text);
+
+            // 检查数据长度限制
+            const keySize = publicKey.algorithm.modulusLength;
+            const maxDataSize = Math.floor((keySize / 8) - 2 * 32 - 2); // SHA-256 hash = 32 bytes
+            if (encoded.length > maxDataSize) {
+                throw new Error(t('rsaDataTooLarge') + ` (最大 ${maxDataSize} 字节)`);
+            }
+
+            const encrypted = await window.crypto.subtle.encrypt(
+                { name: "RSA-OAEP" },
+                publicKey,
+                encoded
+            );
+            return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
+        }
+
+        // RSA 解密
+        async function rsaDecrypt(ciphertext, privateKey) {
+            const binary = Uint8Array.from(atob(ciphertext), c => c.charCodeAt(0));
+            const decrypted = await window.crypto.subtle.decrypt(
+                { name: "RSA-OAEP" },
+                privateKey,
+                binary
+            );
+            return new TextDecoder().decode(decrypted);
+        }
+
+        // RSA 签名
+        async function rsaSign(text, privateKey) {
+            const encoded = new TextEncoder().encode(text);
+            const signature = await window.crypto.subtle.sign(
+                {
+                    name: "RSA-PSS",
+                    saltLength: 32
+                },
+                privateKey,
+                encoded
+            );
+            return btoa(String.fromCharCode(...new Uint8Array(signature)));
+        }
+
+        // RSA 验证
+        async function rsaVerify(text, signature, publicKey) {
+            const encoded = new TextEncoder().encode(text);
+            const sigBinary = Uint8Array.from(atob(signature), c => c.charCodeAt(0));
+            return await window.crypto.subtle.verify(
+                {
+                    name: "RSA-PSS",
+                    saltLength: 32
+                },
+                publicKey,
+                sigBinary,
+                encoded
+            );
+        }
+
+        // RSA 处理函数
+        async function processRSA(inputText) {
+            const rsaModeSelect = document.getElementById('rsaMode');
+            const currentRSAMode = rsaModeSelect?.value || 'encrypt';
+            const publicKeyPEM = document.getElementById('rsaPublicKey')?.value || '';
+            const privateKeyPEM = document.getElementById('rsaPrivateKey')?.value || '';
+
+            if (!publicKeyPEM.trim() && !privateKeyPEM.trim()) {
+                throw new Error(t('rsaKeyGenWarning'));
+            }
+
+            let result = '';
+
+            if (currentRSAMode === 'encrypt') {
+                if (currentMode === 'encrypt') {
+                    // 加密
+                    const publicKey = await importKeyFromPEM(publicKeyPEM, 'public', {
+                        name: "RSA-OAEP",
+                        hash: "SHA-256"
+                    });
+                    const ciphertext = await rsaEncrypt(inputText, publicKey);
+                    result = `${t('encResult')}:\n${ciphertext}\n\n`;
+                    result += `${t('lblKeySizeRSA')}: ${publicKey.algorithm.modulusLength} ${t('infoBits')}`;
+                } else {
+                    // 解密
+                    const privateKey = await importKeyFromPEM(privateKeyPEM, 'private', {
+                        name: "RSA-OAEP",
+                        hash: "SHA-256"
+                    });
+                    const plaintext = await rsaDecrypt(inputText, privateKey);
+                    result = plaintext;
+                }
+            } else {
+                // 签名/验证模式
+                if (currentMode === 'encrypt') {
+                    // 签名
+                    const privateKey = await importKeyFromPEM(privateKeyPEM, 'private', {
+                        name: "RSA-PSS",
+                        hash: "SHA-256"
+                    });
+                    const signature = await rsaSign(inputText, privateKey);
+                    result = `${t('lblSignature')}:\n${signature}\n\n`;
+                    result += `${t('rsaSignSuccess')}\n\n`;
+                    result += `${t('lblKeySizeRSA')}: ${privateKey.algorithm.modulusLength} ${t('infoBits')}`;
+                } else {
+                    // 验证
+                    const signatureInput = document.getElementById('rsaSignature')?.value || '';
+                    if (!signatureInput.trim()) {
+                        throw new Error(t('rsaNoSignature'));
+                    }
+                    const publicKey = await importKeyFromPEM(publicKeyPEM, 'public', {
+                        name: "RSA-PSS",
+                        hash: "SHA-256"
+                    });
+                    const isValid = await rsaVerify(inputText, signatureInput, publicKey);
+                    result = isValid ? t('rsaVerifySuccess') : t('rsaVerifyFailed');
+                }
+            }
+
+            return result;
+        }
+
+        // RSA UI 更新
+        function updateRSAUI() {
+            const rsaModeSelect = document.getElementById('rsaMode');
+            const signatureGroup = document.getElementById('rsaSignatureGroup');
+            const currentRSAMode = rsaModeSelect?.value || 'encrypt';
+
+            if (signatureGroup) {
+                // 签名模式下，解密时需要显示签名输入框
+                signatureGroup.style.display = (currentRSAMode === 'sign' && currentMode === 'decrypt') ? 'block' : 'none';
+            }
+
+            // 更新主按钮文本
+            const mainBtn = document.querySelector('.btn-primary');
+            if (mainBtn) {
+                if (currentRSAMode === 'encrypt') {
+                    mainBtn.textContent = currentMode === 'encrypt' ? t('rsaEncryptOp') : t('rsaDecryptOp');
+                } else {
+                    mainBtn.textContent = currentMode === 'encrypt' ? t('rsaSignOp') : t('rsaVerifyOp');
+                }
+            }
+        }
+
+        // RSA 模式切换
+        function switchRSAMode(mode) {
+            saveFormData();
+            currentMode = mode;
+            renderWorkspace(currentAlgo);
+            setTimeout(() => {
+                restoreFormData();
+                updateRSAUI();
+            }, 0);
+        }
+
+        // EC 模式切换（ECDSA/Ed25519）
+        function switchECMode(mode) {
+            saveFormData();
+            currentMode = mode;
+            renderWorkspace(currentAlgo);
+            setTimeout(() => restoreFormData(), 0);
+        }
+
+        // ===================== ECDSA 相关函数 =====================
+
+        let ecKeyPair = null;
+
+        // 生成 EC 密钥对（ECDSA/ECDH）
+        async function generateECKeyPair(type) {
+            const curve = document.getElementById('ecCurve')?.value || 'P-256';
+            const outputBox = document.getElementById('outputBox');
+
+            outputBox.textContent = t('hashCalculating');
+
+            try {
+                const algorithm = type === 'ECDSA'
+                    ? { name: 'ECDSA', namedCurve: curve }
+                    : { name: 'ECDH', namedCurve: curve };
+
+                const usages = type === 'ECDSA'
+                    ? ['sign', 'verify']
+                    : ['deriveKey', 'deriveBits'];
+
+                const keyPair = await window.crypto.subtle.generateKey(
+                    algorithm,
+                    true,
+                    usages
+                );
+
+                ecKeyPair = keyPair;
+
+                // 导出为 JWK 格式
+                const publicKeyJWK = await window.crypto.subtle.exportKey('jwk', keyPair.publicKey);
+                const privateKeyJWK = await window.crypto.subtle.exportKey('jwk', keyPair.privateKey);
+
+                document.getElementById('ecPublicKey').value = JSON.stringify(publicKeyJWK, null, 2);
+                document.getElementById('ecPrivateKey').value = JSON.stringify(privateKeyJWK, null, 2);
+
+                let result = `${t('ecKeyGenerated')}\n`;
+                result += `${t('lblECCurve')}: ${curve}\n`;
+                result += `${t('lblPublicKey')} x: ${publicKeyJWK.x?.substring(0, 20)}...\n`;
+                result += `${t('lblPublicKey')} y: ${publicKeyJWK.y?.substring(0, 20)}...\n`;
+
+                outputBox.textContent = result;
+                outputBox.classList.remove('error');
+                showToast(t('ecKeyGenerated'));
+            } catch (err) {
+                outputBox.textContent = '错误: ' + err.message;
+                outputBox.classList.add('error');
+            }
+        }
+
+        // 导入 EC 密钥
+        async function importECKey(jwkStr, type, algorithm) {
+            const jwk = JSON.parse(jwkStr);
+            const usages = type === 'public'
+                ? (algorithm.name === 'ECDSA' ? ['verify'] : [])
+                : (algorithm.name === 'ECDSA' ? ['sign'] : ['deriveKey', 'deriveBits']);
+
+            return await window.crypto.subtle.importKey(
+                'jwk',
+                jwk,
+                algorithm,
+                true,
+                usages
+            );
+        }
+
+        // ECDSA 签名
+        async function ecdsaSign(text, privateKey) {
+            const encoded = new TextEncoder().encode(text);
+            const signature = await window.crypto.subtle.sign(
+                {
+                    name: 'ECDSA',
+                    hash: 'SHA-256'
+                },
+                privateKey,
+                encoded
+            );
+            return btoa(String.fromCharCode(...new Uint8Array(signature)));
+        }
+
+        // ECDSA 验证
+        async function ecdsaVerify(text, signature, publicKey) {
+            const encoded = new TextEncoder().encode(text);
+            const sigBinary = Uint8Array.from(atob(signature), c => c.charCodeAt(0));
+            return await window.crypto.subtle.verify(
+                {
+                    name: 'ECDSA',
+                    hash: 'SHA-256'
+                },
+                publicKey,
+                sigBinary,
+                encoded
+            );
+        }
+
+        // 处理 ECDSA
+        async function processECDSA(inputText) {
+            const publicKeyJWK = document.getElementById('ecPublicKey')?.value || '';
+            const privateKeyJWK = document.getElementById('ecPrivateKey')?.value || '';
+            const curve = document.getElementById('ecCurve')?.value || 'P-256';
+
+            if (!publicKeyJWK.trim() && !privateKeyJWK.trim()) {
+                throw new Error(t('rsaKeyGenWarning'));
+            }
+
+            let result = '';
+
+            if (currentMode === 'encrypt') {
+                // 签名
+                const privateKey = await importECKey(privateKeyJWK, 'private', {
+                    name: 'ECDSA',
+                    namedCurve: curve
+                });
+                const signature = await ecdsaSign(inputText, privateKey);
+                result = `${t('lblSignature')}:\n${signature}\n\n`;
+                result += `${t('rsaSignSuccess')}`;
+            } else {
+                // 验证
+                const signatureInput = document.getElementById('ecSignature')?.value || '';
+                if (!signatureInput.trim()) {
+                    throw new Error(t('rsaNoSignature'));
+                }
+                const publicKey = await importECKey(publicKeyJWK, 'public', {
+                    name: 'ECDSA',
+                    namedCurve: curve
+                });
+                const isValid = await ecdsaVerify(inputText, signatureInput, publicKey);
+                result = isValid ? t('rsaVerifySuccess') : t('rsaVerifyFailed');
+            }
+
+            return result;
+        }
+
+        // ===================== ECDH 相关函数 =====================
+
+        // 处理 ECDH
+        async function processECDH(inputText) {
+            const privateKeyJWK = document.getElementById('ecPrivateKey')?.value || '';
+            const otherPublicKeyJWK = document.getElementById('ecOtherPublicKey')?.value || '';
+            const curve = document.getElementById('ecCurve')?.value || 'P-256';
+
+            if (!privateKeyJWK.trim() || !otherPublicKeyJWK.trim()) {
+                throw new Error(t('rsaKeyGenWarning'));
+            }
+
+            try {
+                // 导入私钥
+                const privateKey = await importECKey(privateKeyJWK, 'private', {
+                    name: 'ECDH',
+                    namedCurve: curve
+                });
+
+                // 导入对方的公钥
+                const otherPublicKey = await window.crypto.subtle.importKey(
+                    'jwk',
+                    JSON.parse(otherPublicKeyJWK),
+                    { name: 'ECDH', namedCurve: curve },
+                    true,
+                    []
+                );
+
+                // 派生共享密钥
+                const sharedKey = await window.crypto.subtle.deriveKey(
+                    {
+                        name: 'ECDH',
+                        public: otherPublicKey
+                    },
+                    privateKey,
+                    { name: 'AES-GCM', length: 256 },
+                    true,
+                    ['encrypt', 'decrypt']
+                );
+
+                // 导出共享密钥
+                const rawKey = await window.crypto.subtle.exportKey('raw', sharedKey);
+                const sharedKeyHex = Array.from(new Uint8Array(rawKey))
+                    .map(b => b.toString(16).padStart(2, '0')).join('');
+
+                let result = `${t('lblSharedSecret')}:\n`;
+                result += `Hex: ${sharedKeyHex}\n`;
+                result += `Base64: ${btoa(String.fromCharCode(...new Uint8Array(rawKey)))}\n\n`;
+                result += `${t('lblECCurve')}: ${curve}\n`;
+                result += `${t('lblDerivedKeySize')}: 256 ${t('infoBits')} (AES-GCM)`;
+
+                return result;
+            } catch (err) {
+                throw new Error(t('ecDeriveError') + ': ' + err.message);
+            }
+        }
+
+        // ===================== Ed25519 相关函数 =====================
+
+        let edKeyPair = null;
+
+        // 生成 Ed25519 密钥对
+        async function generateEd25519KeyPair() {
+            const outputBox = document.getElementById('outputBox');
+
+            outputBox.textContent = t('hashCalculating');
+
+            try {
+                const keyPair = await window.crypto.subtle.generateKey(
+                    'Ed25519',
+                    true,
+                    ['sign', 'verify']
+                );
+
+                edKeyPair = keyPair;
+
+                // 导出为 JWK 格式
+                const publicKeyJWK = await window.crypto.subtle.exportKey('jwk', keyPair.publicKey);
+                const privateKeyJWK = await window.crypto.subtle.exportKey('jwk', keyPair.privateKey);
+
+                document.getElementById('edPublicKey').value = JSON.stringify(publicKeyJWK, null, 2);
+                document.getElementById('edPrivateKey').value = JSON.stringify(privateKeyJWK, null, 2);
+
+                let result = `${t('ecKeyGenerated')}\n`;
+                result += `算法: Ed25519\n`;
+                result += `${t('lblPublicKey')}: ${publicKeyJWK.x?.substring(0, 20)}...\n`;
+
+                outputBox.textContent = result;
+                outputBox.classList.remove('error');
+                showToast(t('ecKeyGenerated'));
+            } catch (err) {
+                outputBox.textContent = '错误: ' + err.message;
+                outputBox.classList.add('error');
+            }
+        }
+
+        // 导入 Ed25519 密钥
+        async function importEd25519Key(jwkStr, type) {
+            const jwk = JSON.parse(jwkStr);
+            const usages = type === 'public' ? ['verify'] : ['sign'];
+
+            return await window.crypto.subtle.importKey(
+                'jwk',
+                jwk,
+                'Ed25519',
+                true,
+                usages
+            );
+        }
+
+        // Ed25519 签名
+        async function ed25519Sign(text, privateKey) {
+            const encoded = new TextEncoder().encode(text);
+            const signature = await window.crypto.subtle.sign(
+                'Ed25519',
+                privateKey,
+                encoded
+            );
+            return btoa(String.fromCharCode(...new Uint8Array(signature)));
+        }
+
+        // Ed25519 验证
+        async function ed25519Verify(text, signature, publicKey) {
+            const encoded = new TextEncoder().encode(text);
+            const sigBinary = Uint8Array.from(atob(signature), c => c.charCodeAt(0));
+            return await window.crypto.subtle.verify(
+                'Ed25519',
+                publicKey,
+                sigBinary,
+                encoded
+            );
+        }
+
+        // 处理 Ed25519
+        async function processEd25519(inputText) {
+            const publicKeyJWK = document.getElementById('edPublicKey')?.value || '';
+            const privateKeyJWK = document.getElementById('edPrivateKey')?.value || '';
+
+            if (!publicKeyJWK.trim() && !privateKeyJWK.trim()) {
+                throw new Error(t('rsaKeyGenWarning'));
+            }
+
+            let result = '';
+
+            if (currentMode === 'encrypt') {
+                // 签名
+                const privateKey = await importEd25519Key(privateKeyJWK, 'private');
+                const signature = await ed25519Sign(inputText, privateKey);
+                result = `${t('lblSignature')}:\n${signature}\n\n`;
+                result += `${t('rsaSignSuccess')}`;
+            } else {
+                // 验证
+                const signatureInput = document.getElementById('edSignature')?.value || '';
+                if (!signatureInput.trim()) {
+                    throw new Error(t('rsaNoSignature'));
+                }
+                const publicKey = await importEd25519Key(publicKeyJWK, 'public');
+                const isValid = await ed25519Verify(inputText, signatureInput, publicKey);
+                result = isValid ? t('rsaVerifySuccess') : t('rsaVerifyFailed');
+            }
+
+            return result;
+        }
+
         // 复制结果
         function copyOutput() {
             const outputBox = document.getElementById('outputBox');
@@ -3043,6 +4123,7 @@
 
             // 更新分类标题
             document.getElementById('catSymmetric').textContent = t('catSymmetric');
+            document.getElementById('catAsymmetric').textContent = t('catAsymmetric');
             document.getElementById('catHash').textContent = t('catHash');
             document.getElementById('catHMAC').textContent = t('catHMAC');
             document.getElementById('catEncoding').textContent = t('catEncoding');
@@ -3054,7 +4135,7 @@
             document.getElementById('btnUtf8Encode').textContent = 'UTF-8 ' + t('catEncoding');
 
             // 更新footer
-            document.getElementById('footerText').innerHTML = t('footer') + ' <a href="https://github.com/brix/crypto-js" target="_blank">Crypto.js</a>';
+            document.getElementById('footerText').innerHTML = t('footer') + ' <a href="https://github.com/brix/crypto-js" target="_blank">Crypto.js</a> & Web Crypto API';
         }
     </script>
 </body>

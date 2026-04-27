@@ -13,6 +13,28 @@
 - **RC4** - 流密码算法，简单快速
 - **RC4Drop** - RC4 改进版本，安全性更高
 
+### 公钥加密（非对称加密）
+- **RSA** - RSA 非对称加密算法
+  - 支持密钥长度：1024、2048、4096 位
+  - 加密/解密模式：RSA-OAEP
+  - 签名/验证模式：RSA-PSS
+  - 密钥格式：PEM、DER (Hex)、Base64
+
+- **ECDSA** - 椭圆曲线数字签名算法
+  - 支持曲线：P-256、P-384、P-521
+  - 功能：签名/验证
+  - 密钥格式：JWK (JSON Web Key)
+
+- **ECDH** - 椭圆曲线密钥交换算法
+  - 支持曲线：P-256、P-384、P-521
+  - 功能：派生共享密钥（用于 AES-256-GCM）
+  - 密钥格式：JWK
+
+- **Ed25519** - EdDSA 签名算法
+  - 基于扭曲 Edwards 曲线
+  - 功能：签名/验证
+  - 密钥短（32字节），签名速度快
+
 ### 哈希算法
 - **MD5** - 128 位哈希（不推荐用于安全场景）
 - **SHA-1** - 160 位哈希（逐渐被淘汰）
@@ -82,8 +104,14 @@
 ## 技术栈
 
 - 纯 HTML/CSS/JavaScript
-- [Crypto.js](https://github.com/brix/crypto-js) 用于加密操作
+- [Crypto.js](https://github.com/brix/crypto-js) 用于对称加密、哈希等操作
+- Web Crypto API 用于公钥加密（RSA、ECDSA、ECDH、Ed25519）
 - 响应式设计，支持桌面和移动设备
+
+## 注意事项
+
+- 公钥加密算法（RSA、ECDSA、ECDH、Ed25519）仅在 HTTPS 或 localhost 下工作
+- RSA 加密数据有长度限制（2048位密钥最大约190字节）
 
 ## 许可证
 
